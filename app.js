@@ -52,6 +52,22 @@ const superMarketLayer = new deck.GeoJsonLayer({
 let bottomLeft=  [13.3, 52.5];
 let topRight = [ 13.35, 52.55];
 
+let displayLoaderCounter=0;
+
+function showLoader(){
+  displayLoaderCounter ++;
+  if(displayLoaderCounter > 0 ){
+    document.getElementById("loader").style.display="initial";
+  }
+}
+
+function hideLoader(){
+  displayLoaderCounter --;
+  if(displayLoaderCounter <= 0){
+    document.getElementById("loader").style.display="none";
+  }
+}
+
 function loadParkingLots() {
   let query= `data=[out:json][timeout:50];
   (
@@ -75,6 +91,7 @@ function loadSuperMarkets() {
 
 function loadLayerWithOverpass(oLayer, oQuery) {
   let viewState = deckMap._getViewState();
+  showLoader();
   fetch("https://lz4.overpass-api.de/api/interpreter", {
       "body": oQuery,
       "method": "POST"
@@ -87,6 +104,7 @@ function loadLayerWithOverpass(oLayer, oQuery) {
         changeFlags:{ dataChanged: true}
       }
     );
+    hideLoader();
   }).catch(e => {
       console.error(e);
   });
@@ -105,9 +123,10 @@ const deckMap = new deck.DeckGL({
   onWebGLInitialized: () => {
     loadParkingLots();
     loadSuperMarkets();
-  }/*,
+  },
   onDragEnd: () => {
     loadParkingLots();
     loadSuperMarkets();
-  }*/
+  }
 });
+

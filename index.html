@@ -1,27 +1,31 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
+  <link rel="stylesheet" href="styles.css">
   <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
   <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
   <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
-  
   <script src="https://libs.cartocdn.com/carto-vl/v1.4.4/carto-vl.min.js"></script>
   <script src="https://unpkg.com/@deck.gl/carto@^8.3.0/dist.min.js"></script>
-  <script src="osmtogeojson.js"></script>
+  <script src="./osmtogeojson.js"></script>
   <meta charset='UTF-8' />
   <title>CARTO deck.gl example</title>
 </head>
-<style>
-html, body, #container, #map {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-}
-</style>
+
 <body>
   <div id="container">
     <div id="map"></div>
+    <aside class="toolbox">
+      <div class="box">
+        <header>
+          <h1>Pommes Buden Optimizer</h1>
+        </header>
+        <section class="open-sans" id = "SECTIONID">
+          <div class="separator"></div>
+        </section>
+      </div>
+    </aside>
     <canvas id="deck-canvas"></canvas>
   </div>
   <script src='app.js'></script>

@@ -53,27 +53,10 @@ const deckMap = new deck.DeckGL({
         "body": "data=%5Bout%3Ajson%5D%5Btimeout%3A50%5D%3B%0A(%0A++nwr%5B%22amenity%22%3D%22parking%22%5D("+bottomLeft[1]+"%2C"+bottomLeft[0]+"%2C"+topRight[1]+"%2C"+topRight[0]+")%3B%0A)%3B%0Aout+body%3B%0A%3E%3B%0Aout+skel+qt%3B",
         "method": "POST"
     }).then(res => res.json()).then(oResult => {
-        let aFeatures = oResult.elements
-            .filter(oParking => ("lon" in oParking && "lat" in oParking))
-            .map(oParking => {
-            return {
-                "type": "Feature",
-                "geometry": {
-                "type": "Point",
-                "coordinates": [oParking.lon, oParking.lat]
-                },
-                "properties": {}
-            };
-        });
-
-      let oGeoJsonCollection = {
-          "type": "FeatureCollection",
-          "features": aFeatures
-      };
       layer.updateState(
         {
           props: {
-            data:oGeoJsonCollection,
+            data:osmtogeojson(oResult),
           },
           changeFlags:{ dataChanged: true}
         }

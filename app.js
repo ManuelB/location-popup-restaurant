@@ -31,7 +31,7 @@ const parkingLotLayer = new deck.GeoJsonLayer({
     lineWidthScale: 20,
     lineWidthMinPixels: 2,
     getFillColor: [160, 160, 180, 200],
-    getLineColor: d => [160, 160, 180, 200],
+    getLineColor: _ => [160, 160, 180, 200],
     getRadius: 5,
     getLineWidth: 1,
     getElevation: 2
@@ -46,32 +46,32 @@ const superMarketLayer = new deck.GeoJsonLayer({
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
   getFillColor: [180, 30, 30, 200],
-  getLineColor: d => [160, 160, 180, 200],
+  getLineColor: _ => [160, 160, 180, 200],
   getRadius: 5,
   getLineWidth: 1,
   getElevation: 20
 });
 
 const ICON_MAPPING = {
-  marker: {x: 0, y: 0, width: 128, height: 128, mask: true}
+  marker: {
+    x: 0, 
+    y: 0, 
+    width: 128, 
+    height: 128, 
+    mask: true,
+    anchorX: -64,
+    anchory: -64}
 };
+const getMapIcon = () =>{
+  return 'marker';
+}
 
-const optimizedLocationLayer = new deck.IconLayer({
-  id: 'optimized-location-layer',
-  pickable: true,
-  // iconAtlas and iconMapping are required
-  // getIcon: return a string
-  iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
-  iconMapping: ICON_MAPPING,
-  getIcon: d => 'marker',
-  sizeScale: 15,
-  getPosition: d => d.coordinates,
-  getSize: d => 5,
-  getColor: d => [100, 140, 0],
-  //data: [{"name":"Lafayette (LAFY)","code":"LF","address":"3601 Deer Hill Road, Lafayette CA 94549","entries":"3481","exits":"3616","coordinates":[-122.123801,37.893394]},
-  //{"name":"12th St. Oakland City Center (12TH)","code":"12","address":"1245 Broadway, Oakland CA 94612","entries":"13418","exits":"13547","coordinates":[-122.271604,37.803664]} ],
-  //highlightedObjectIndex: 1
-});
+const getCoordinates = d =>{
+  // debugger;
+  return d.coordinates;
+}
+
+
 
 let bottomLeft=  [13.3, 52.5];
 let topRight = [ 13.35, 52.55];
@@ -168,9 +168,9 @@ function optimizeLocation(start, rTree) {
         }
     };
 
-    const learningRate = 10;
+    const learningRate = 0.001;
     const optimizer = tf.train.sgd(learningRate);
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 100; i++) {
         optimizer.minimize(scoreOfCurrentCoordinates);
     }
 
@@ -181,32 +181,54 @@ function optimizeLocation(start, rTree) {
 }
 
 // Create Deck.GL map
-const deckMap = new deck.DeckGL({
+deckMap = new deck.DeckGL({
   mapStyle: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json',
   initialViewState: {
     longitude: 13.302428631992042,
     latitude: 52.50131842240836,
     zoom: 15
   },
-  layers: [parkingLotLayer, superMarketLayer, optimizedLocationLayer],
+  layers: [parkingLotLayer, superMarketLayer],
   controller: true,
+  onViewStateChange: ({viewState}) => {
+    map.jumpTo({
+      center: [viewState.longitude, viewState.latitude],
+      zoom: viewState.zoom,
+      bearing: viewState.bearing,
+      pitch: viewState.pitch
+    });
+  },
   onWebGLInitialized: () => {
     loadParkingLots();
     loadSuperMarkets();
   },
   onDragEnd: () => {
-    let start = [deckMap._getViewState().longitude, deckMap._getViewState().latitude];
+    let start = [map.getCenter().lng, map.getCenter().lat];
     let optimizedLocation = optimizeLocation(start, superMarketRTree);
-    alert(optimizedLocation);
-    /*nextOldProps = (optimizedLocationLayer.props == undefined ? { iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png'} : optimizedLocationLayer.props);
-    optimizedLocationLayer.updateState({
-      props: {
-        "data": [{"coordinates": optimizedLocation}]
-      },
-      oldProps: nextOldProps,
-      changeFlags:{ dataChanged: true}
-    })*/
+    
+    let optimizedLocationLayer = new deck.IconLayer({
+      id: 'optimized-location-layer',
+      pickable: true,
+      // iconAtlas and iconMapping are required
+      // getIcon: return a string
+      iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
+      iconMapping: ICON_MAPPING,
+      getIcon: getMapIcon,
+      sizeScale: 15,
+      getPosition: getCoordinates,
+      getSize: _ => 5,
+      getColor: _ => [100, 140, 0],
+      data: [{"coordinates": optimizedLocation}]
+    });
+
+    deckMap.setProps({
+      layers: [parkingLotLayer, superMarketLayer, optimizedLocationLayer]
+    });
+   // optimizedLocationLayer.draw();
     //loadParkingLots();
     //loadSuperMarkets();
-  }
+  },
+  /*shouldUpdateState: (props, oldProps, context, changeFlags) =>{
+      alert("Redrawing is done");
+  }*/
 });

@@ -1,3 +1,6 @@
+var parkingLotRTree = new rbush();
+var superMarketRTree = new rbush();
+
 const INITIAL_VIEW_STATE = {
     longitude: 13.302428631992042,
     latitude: 52.50131842240836,
@@ -49,6 +52,27 @@ const superMarketLayer = new deck.GeoJsonLayer({
   getElevation: 20
 });
 
+const ICON_MAPPING = {
+  marker: {x: 0, y: 0, width: 128, height: 128, mask: true}
+};
+
+const optimizedLocationLayer = new deck.IconLayer({
+  id: 'optimized-location-layer',
+  pickable: true,
+  // iconAtlas and iconMapping are required
+  // getIcon: return a string
+  iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
+  iconMapping: ICON_MAPPING,
+  getIcon: d => 'marker',
+  sizeScale: 15,
+  getPosition: d => d.coordinates,
+  getSize: d => 5,
+  getColor: d => [100, 140, 0],
+  //data: [{"name":"Lafayette (LAFY)","code":"LF","address":"3601 Deer Hill Road, Lafayette CA 94549","entries":"3481","exits":"3616","coordinates":[-122.123801,37.893394]},
+  //{"name":"12th St. Oakland City Center (12TH)","code":"12","address":"1245 Broadway, Oakland CA 94612","entries":"13418","exits":"13547","coordinates":[-122.271604,37.803664]} ],
+  //highlightedObjectIndex: 1
+});
+
 let bottomLeft=  [13.3, 52.5];
 let topRight = [ 13.35, 52.55];
 
@@ -76,7 +100,7 @@ function loadParkingLots() {
   out+body;
   >;
   out+skel+qt;`
-  loadLayerWithOverpass(parkingLotLayer, encodeURI(query));
+  loadLayerWithOverpass(parkingLotLayer, encodeURI(query), parkingLotRTree);
 }
 function loadSuperMarkets() {
   let query= `data=[out:json][timeout:50];
@@ -86,20 +110,34 @@ function loadSuperMarkets() {
   out+body;
   >;
   out+skel+qt;`
-  loadLayerWithOverpass(superMarketLayer, encodeURI(query));
+  loadLayerWithOverpass(superMarketLayer, encodeURI(query), superMarketRTree);
 }
 
-function loadLayerWithOverpass(oLayer, oQuery) {
+function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
   let viewState = deckMap._getViewState();
   showLoader();
   fetch("https://lz4.overpass-api.de/api/interpreter", {
       "body": oQuery,
       "method": "POST"
   }).then(res => res.json()).then(oResult => {
+    let oFeatureCollection = osmtogeojson(oResult);
+
+    for(let oFeature of oFeatureCollection.features) {
+      if(oFeature.geometry.type == "Point") {
+        oRIndex.insert({
+          "minX": oFeature.geometry.coordinates[0],
+          "minY": oFeature.geometry.coordinates[1],
+          "maxX": oFeature.geometry.coordinates[0],
+          "maxY": oFeature.geometry.coordinates[1],
+          "feature": oFeature
+        });
+      }
+    }
+
     oLayer.updateState(
       {
         props: {
-          data:osmtogeojson(oResult),
+          data: oFeatureCollection,
         },
         changeFlags:{ dataChanged: true}
       }
@@ -110,6 +148,38 @@ function loadLayerWithOverpass(oLayer, oQuery) {
   });
 }
 
+function optimizeLocation(start, rTree) {
+    const scorePoint = tf.tensor1d([start[0], start[1]]).variable();
+    // finds the closest parking lot
+    // calculate distance
+    // TODO:
+    // use cumulative normal distribution function for judging distance
+    // - very close -> very good
+    // - far away -> we don't care
+    const scoreOfCurrentCoordinates = function () {
+        let pointCoordinates = [scorePoint.dataSync()[0], scorePoint.dataSync()[1]];
+        let closestFeature = knn(rTree, pointCoordinates[0],  pointCoordinates[1], 1);
+        if(closestFeature) {
+            // distance to start point
+            var squaredDifference = tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].feature.geometry.coordinates)).sum().sqrt();
+            return squaredDifference;
+        } else {
+            return tf.tensor1d([Infinity]);
+        }
+    };
+
+    const learningRate = 10;
+    const optimizer = tf.train.sgd(learningRate);
+    for (let i = 0; i < 20; i++) {
+        optimizer.minimize(scoreOfCurrentCoordinates);
+    }
+
+    var optimizedLocation = scorePoint.dataSync();
+
+    return optimizedLocation;
+
+}
+
 // Create Deck.GL map
 const deckMap = new deck.DeckGL({
   mapStyle: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json',
@@ -118,15 +188,25 @@ const deckMap = new deck.DeckGL({
     latitude: 52.50131842240836,
     zoom: 15
   },
-  layers: [parkingLotLayer, superMarketLayer],
+  layers: [parkingLotLayer, superMarketLayer, optimizedLocationLayer],
   controller: true,
   onWebGLInitialized: () => {
     loadParkingLots();
     loadSuperMarkets();
   },
   onDragEnd: () => {
-    loadParkingLots();
-    loadSuperMarkets();
+    let start = [deckMap._getViewState().longitude, deckMap._getViewState().latitude];
+    let optimizedLocation = optimizeLocation(start, superMarketRTree);
+    alert(optimizedLocation);
+    /*nextOldProps = (optimizedLocationLayer.props == undefined ? { iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png'} : optimizedLocationLayer.props);
+    optimizedLocationLayer.updateState({
+      props: {
+        "data": [{"coordinates": optimizedLocation}]
+      },
+      oldProps: nextOldProps,
+      changeFlags:{ dataChanged: true}
+    })*/
+    //loadParkingLots();
+    //loadSuperMarkets();
   }
 });
-

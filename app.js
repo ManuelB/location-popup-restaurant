@@ -49,8 +49,17 @@ const deckMap = new deck.DeckGL({
     let viewState = deckMap._getViewState();
     let bottomLeft=  [13.3, 52.5];
     let topRight = [ 13.35, 52.55];
-    fetch("https://lz4.overpass-api.de/api/interpreter", {
-        "body": "data=%5Bout%3Ajson%5D%5Btimeout%3A50%5D%3B%0A(%0A++nwr%5B%22amenity%22%3D%22parking%22%5D("+bottomLeft[1]+"%2C"+bottomLeft[0]+"%2C"+topRight[1]+"%2C"+topRight[0]+")%3B%0A)%3B%0Aout+body%3B%0A%3E%3B%0Aout+skel+qt%3B",
+    
+    let query= "data=[out:json][timeout:50];\n";
+    query += "(\n";
+    query += "++nwr[\"amenity\"=\"parking\"]";
+    query += "(" + bottomLeft[1] + ","+ bottomLeft[0]  +"," + topRight[1] + "," + topRight[0] + ");\n";
+    query += ");\n"
+    query += "out+body;\n"
+    query += ">;\n";
+
+    query += "out+skel+qt;";    fetch("https://lz4.overpass-api.de/api/interpreter", {
+        "body": encodeURI(query),
         "method": "POST"
     }).then(res => res.json()).then(oResult => {
       layer.updateState(

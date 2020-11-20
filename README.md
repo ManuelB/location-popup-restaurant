@@ -8,3 +8,5 @@ This project uses the following data sources and technologies to find a good pla
  * [Carto to read free non commercial vector tiles and style the map](https://carto.com/basemaps/)
  * [Tensoflow JS for an SGD Optimizer](https://js.tensorflow.org/api/latest/#train.sgd)
  * [Deck.gl for 3D visualization](https://deck.gl/)
+
+[Demo](https://manuelb.github.io/location-popup-restaurant/)

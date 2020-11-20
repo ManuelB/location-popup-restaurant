@@ -53,10 +53,24 @@ let bottomLeft=  [13.3, 52.5];
 let topRight = [ 13.35, 52.55];
 
 function loadParkingLots() {
-  loadLayerWithOverpass(parkingLotLayer, "data=%5Bout%3Ajson%5D%5Btimeout%3A50%5D%3B%0A(%0A++nwr%5B%22amenity%22%3D%22parking%22%5D("+bottomLeft[1]+"%2C"+bottomLeft[0]+"%2C"+topRight[1]+"%2C"+topRight[0]+")%3B%0A)%3B%0Aout+body%3B%0A%3E%3B%0Aout+skel+qt%3B");
+  let query= `data=[out:json][timeout:50];
+  (
+  ++nwr["amenity"="parking"](`+ bottomLeft[1] +`,`+ bottomLeft[0] +`,`+ topRight[1] +`,`+ topRight[0] +`);
+  );
+  out+body;
+  >;
+  out+skel+qt;`
+  loadLayerWithOverpass(parkingLotLayer, encodeURI(query));
 }
 function loadSuperMarkets() {
-  loadLayerWithOverpass(superMarketLayer, "data=%5Bout%3Ajson%5D%5Btimeout%3A50%5D%3B%0A(%0A++nwr%5B%22shop%22%3D%22supermarket%22%5D("+bottomLeft[1]+"%2C"+bottomLeft[0]+"%2C"+topRight[1]+"%2C"+topRight[0]+")%3B%0A)%3B%0Aout+body%3B%0A%3E%3B%0Aout+skel+qt%3B");
+  let query= `data=[out:json][timeout:50];
+  (
+  ++nwr["shop"="supermarket"](`+ bottomLeft[1] +`,`+ bottomLeft[0] +`,`+ topRight[1] +`,`+ topRight[0] +`);
+  );
+  out+body;
+  >;
+  out+skel+qt;`
+  loadLayerWithOverpass(superMarketLayer, encodeURI(query));
 }
 
 function loadLayerWithOverpass(oLayer, oQuery) {

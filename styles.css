@@ -16,6 +16,7 @@ html, body, #container, #map {
   max-width: 30rem;
   z-index: 2;
   overflow-wrap: break-word;
+  text-align: center;
 }
 
 .box {
@@ -46,7 +47,6 @@ html, body, #container, #map {
 }
 
 .current-location {
-  opacity: 0.9;
   font-size: 2em;
   line-height: 1.6;
   min-height: 5rem;
@@ -79,7 +79,32 @@ html, body, #container, #map {
 }
 
 .btn > * {
-  position: relative;
+ 
+
+.lds-dual-ring {
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+}
+.lds-dual-ring:after {
+  content: " ";
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 8px;
+  border-radius: 50%;
+  border: 6px solid #fff;
+  border-color: #fff transparent #fff transparent;
+  animation: lds-dual-ring 1.2s linear infinite;
+}
+@keyframes lds-dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+} position: relative;
 }
 
 .btn span {
@@ -116,32 +141,6 @@ html, body, #container, #map {
   transition: width .2s ease-out, padding-top .2s ease-out;
 }
 
-/* Styles, not important */
-*, *:before, *:after {
-  box-sizing: border-box;
-}
-
-html {
-  position: relative;
-  height: 100%;
-}
-
-body {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  
-  -webkit-transform: translate(-50%, -50%);
-  -moz-transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
-  -o-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
-  
-  background-color: #ecf0f1;
-  color: #34495e;
-  font-family: Trebuchet, Arial, sans-serif;
-  text-align: center;
-}
 
 h2 {
   font-weight: normal;
@@ -167,4 +166,24 @@ h2 {
   bottom: 0;
   height: 3rem;
   width: 100%;
+}
+
+/* -----
+SVG Icons - svgicons.sparkk.fr
+----- */
+
+.svg-icon {
+  width: 1em;
+  height: 1em;
+}
+
+.svg-icon path,
+.svg-icon polygon,
+.svg-icon rect {
+  fill: #000;
+}
+
+.svg-icon circle {
+  stroke: #000;
+  stroke-width: 1;
 }

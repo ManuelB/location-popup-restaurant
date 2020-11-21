@@ -1,17 +1,15 @@
-var parkingLotRTree = new rbush();
-var superMarketRTree = new rbush();
+
+
+const parkingLotRTree = new rbush();
+const superMarketRTree = new rbush();
+const sectionText = document.getElementById("SECTIONID");
+const parkingText = document.getElementById("INFOPARKING");
 
 const INITIAL_VIEW_STATE = {
     longitude: 13.302428631992042,
     latitude: 52.50131842240836,
     zoom: 15
   }
-
-carto.setDefaultAuth({
-  username: 'julesmuc',
-  apiKey: '57ad2b5fd65c30d57aa20fe4a4e64ae6ab8173d7'
-});
-
 
 // Add Mapbox GL for the basemap. It's not a requirement if you don't need a basemap.
 const map = new mapboxgl.Map({
@@ -22,6 +20,11 @@ const map = new mapboxgl.Map({
   zoom: INITIAL_VIEW_STATE.zoom
 });
 
+const getParkingSpaceInfo = evt => {
+  if (evt.object.properties) {
+    parkingText.innerHTML = JSON.stringify(evt.object.properties);
+  }
+}
 const parkingLotLayer = new deck.GeoJsonLayer({
     id: 'parking-lot-layer',
     pickable: true,
@@ -34,7 +37,8 @@ const parkingLotLayer = new deck.GeoJsonLayer({
     getLineColor: _ => [160, 160, 180, 200],
     getRadius: 5,
     getLineWidth: 1,
-    getElevation: 2
+    getElevation: 2,
+    onClick : evt => getParkingSpaceInfo(evt)
 });
 
 const superMarketLayer = new deck.GeoJsonLayer({
@@ -179,6 +183,7 @@ function optimizeLocation(start, rTree) {
 
 }
 
+
 // Create Deck.GL map
 let deckMap = new deck.DeckGL({
   mapStyle: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json',
@@ -204,7 +209,7 @@ let deckMap = new deck.DeckGL({
   onDragEnd: () => {
     let start = [map.getCenter().lng, map.getCenter().lat];
     let optimizedLocation = optimizeLocation(start, superMarketRTree);
-    document.getElementById("SECTIONID").innerText= `Current optimized location ${optimizedLocation[0]}:${optimizedLocation[1]} `;
+    sectionText.innerText= `Current optimized location ${optimizedLocation[0]}:${optimizedLocation[1]} `;
     let optimizedLocationLayer = new deck.IconLayer({
       id: 'optimized-location-layer',
       pickable: true,
@@ -231,4 +236,3 @@ let deckMap = new deck.DeckGL({
   }*/
 });
 
-deckMap.on

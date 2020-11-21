@@ -99,9 +99,9 @@ const peopleLayer = new deck.GeoJsonLayer({
   extruded: true,
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
-  opacity:0.05,
+  opacity:0.07,
   getElevation: d => Math.sqrt(d.properties.einwohner  / d.properties.qkm) * 0.1,
-  getFillColor: d => colorScale((d.properties.einwohner / d.properties.qkm)/10000),
+  getFillColor: d => colorScale((d.properties.einwohner / d.properties.qkm)/5000),
   getLineColor: [255, 255, 255],
   getRadius: 5,
   getLineWidth: 1, 
@@ -110,7 +110,7 @@ const peopleLayer = new deck.GeoJsonLayer({
 
 function colorScale(x) {
 
-  const i = Math.round(x * 1) + 4;
+  const i = Math.round(x * 1) + 1;
   if (x < 0) {
     return COLOR_SCALE[i] || COLOR_SCALE[0];
   }
@@ -120,6 +120,7 @@ function colorScale(x) {
 
 function getTooltip({object}) {
   return object && `
+    Bezirk ${(object.properties.note)}
     Population/qkm
     ${Math.round(object.properties.einwohner / object.properties.qkm )}`;
 }
@@ -202,10 +203,11 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
 
    // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
     let oFeatureCollection=oResult;
-    
+    console.log(oResult);
 
     for (let oFeature of oFeatureCollection.features) {
       if (oFeature.geometry.type == "Point") {
+  
         oRIndex.insert({
           "minX": oFeature.geometry.coordinates[0],
           "minY": oFeature.geometry.coordinates[1],

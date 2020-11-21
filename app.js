@@ -324,7 +324,7 @@ let deckMap = new deck.DeckGL({
     latitude: 52.50131842240836,
     zoom: 15
   },
-  layers: [peopleLayer,superMarketLayer,parkingLotLayer],
+  layers: [superMarketLayer,parkingLotLayer,peopleLayer],
   getTooltip,
   controller: true,
   onViewStateChange: ({ viewState }) => {
@@ -404,7 +404,7 @@ const flyToPoint = currentIndex => {
         transitionInterpolator: new deck.FlyToInterpolator(),
         transitionDuration: '1000'
       },
-      layers: [iconLayer, peopleLayer,superMarketLayer,parkingLotLayer]
+      layers: [iconLayer,superMarketLayer,parkingLotLayer,peopleLayer]
     });
   }
   else {

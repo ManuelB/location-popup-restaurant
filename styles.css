@@ -12,7 +12,6 @@ html, body, #container, #map {
   box-shadow: 0 0px 16px rgba(0, 0, 0, 0.24);
   top: 1vh;
   right: 1vw;
-  min-height: 47.5rem;
   min-width: 20rem;
   max-width: 30rem;
   z-index: 2;
@@ -21,7 +20,13 @@ html, body, #container, #map {
   padding: 0 0 3rem 0;
   text-align: center;
 }
-
+.kpi {
+  font-size: 2rem;
+  font-weight: bold;
+}
+.label {
+  font-size: 1.5rem;
+}
 .box-1 {
   background-color: #ffa45b; 
 }
@@ -47,7 +52,7 @@ html, body, #container, #map {
   font-size: 2em;
   line-height: 1.6;
   min-height: 5rem;
-  padding: 0.5rem;
+  padding: 0.75rem;
 }
 
 .btn {
@@ -182,4 +187,4 @@ margin-left: 2rem;
 }
 .start-section {
   display: none;
-}
+}}

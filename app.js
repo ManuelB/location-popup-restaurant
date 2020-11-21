@@ -54,8 +54,8 @@ const getParkingSpaceInfo = (evt, oSuperMarketFeature) => {
   let coord = evt.object.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
   let areaParkingSpot = factory.createPolygon(coord).getArea();
   
-  document.getElementById("revenue-potential").innerHTML = (Math.rand()*1000).toFixed()+" €";
-  document.getElementById("daily-sales").innerHTML = (Math.rand()*1000).toFixed()+" €";
+  document.getElementById("revenue-potential").innerHTML = (Math.random()*1000).toFixed()+" €";
+  document.getElementById("daily-sales").innerHTML = (Math.random()*200).toFixed();
   document.getElementById("supermarket-name").innerHTML = oSuperMarketFeature.properties.name;
   let areaqm = areaParkingSpot * 1000000000;
   document.getElementById("parkinglot-area").innerHTML = `${areaqm.toFixed()} m²`; 
@@ -313,7 +313,20 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
   }
   aSortedDistanceParkingLotSuperMarket = aDistanceParkingLotSuperMarket.sort((a,b) => a.distance-b.distance);
   
-  return aSortedDistanceParkingLotSuperMarket;
+  let mMapAlreadyIn = {};
+  aUniqueSortedDistanceParkingLotSuperMarket = [];
+  for(let oItems of aSortedDistanceParkingLotSuperMarket) {
+    let sSuperMarketId = oItems.superMarket.feature.id;
+    if(!(sSuperMarketId in mMapAlreadyIn)) {
+      mMapAlreadyIn[sSuperMarketId] = true;
+      aUniqueSortedDistanceParkingLotSuperMarket.push(oItems);
+    }
+
+
+  }
+
+
+  return aUniqueSortedDistanceParkingLotSuperMarket;
 };
 
 // Create Deck.GL map	
@@ -363,10 +376,10 @@ forwardButton.addEventListener("click", _ => {
 
 const flyToPoint = currentIndex => {
   let currentPoint2;
-  if(!aSortedDistanceParkingLotSuperMarket) {
+  if(!aUniqueSortedDistanceParkingLotSuperMarket) {
     return;
   }
-  let feature = aSortedDistanceParkingLotSuperMarket;
+  let feature = aUniqueSortedDistanceParkingLotSuperMarket;
   if (currentIndex > feature.length || currentIndex < 0) {
     backButton.disabled = true
     currentIndex=currentPoint=0;
@@ -374,14 +387,13 @@ const flyToPoint = currentIndex => {
     backButton.disabled = false
   }
   try {
-    let featurePoint = aSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.feature;
+    let featurePoint = aUniqueSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.feature;
     currentPoint2 = featurePoint.geometry.coordinates;
-    getParkingSpaceInfo({"object": aSortedDistanceParkingLotSuperMarket[currentIndex].parkingLot.feature}, aSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.feature);
+    getParkingSpaceInfo({"object": aUniqueSortedDistanceParkingLotSuperMarket[currentIndex].parkingLot.feature}, aSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.feature);
   } catch (error) {
     console.log(error);
   }
   if (currentPoint2) {
-    console.log(`${currentPoint2[0]} : ${currentPoint2[1]}`);
     deckMap.setProps({
       viewState: {
         longitude: currentPoint2[0],

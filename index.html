@@ -12,6 +12,7 @@
   <script src="./osmtogeojson.js"></script>
   <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
   <script src="https://unpkg.com/rbush-knn@3.0.1/rbush-knn.min.js"></script>
+  <script src="https://unpkg.com/jsts@2.6.1/dist/jsts.min.js"></script>
   <meta charset='UTF-8' />
   <title>CARTO deck.gl example</title>
 </head>
@@ -28,6 +29,12 @@
         <section class="open-sans">
           <div class="separator"></div>
           <div class="current-location" id = "SECTIONID"></div>
+          <button id="back-id">
+            zurück
+          </button>
+          <button id="forward-id">
+            vorwärts
+          </button>
           <div class="current-location" >Parking Spot Infos:</div>
           <div class="current-location" id = "INFOPARKING"></div>
         </section>
@@ -37,5 +44,4 @@
   </div>
   <script src='app.js'></script>
 </body>
-
 </html>

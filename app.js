@@ -54,8 +54,11 @@ const map = new mapboxgl.Map({
 const getParkingSpaceInfo = (evt, oFeature) => {
   let areaParkingSpot = 0;
   if (evt) {
-    let coord = evt.object.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
-    areaParkingSpot = factory.createPolygon(coord).getArea();
+    // if this is a polygon calculate the area
+    if("map" in evt.object.geometry.coordinates[0]) {
+      let coord = evt.object.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
+      areaParkingSpot = factory.createPolygon(coord).getArea();
+    }
     revenue.innerHTML = (Math.random() * 1000).toFixed() + " €";
     dailySales.innerHTML = (Math.random() * 200).toFixed();
     supermarketName.innerHTML = oFeature.properties ? oFeature.properties.name : "";

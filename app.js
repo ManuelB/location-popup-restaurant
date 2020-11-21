@@ -186,14 +186,17 @@ function loadSuperMarkets() {
 }
 
 function loadPeople() {
-  let query = `data=%5Bout:json%5D%5Btimeout:50%5D;%0A%20%20(%0A%20%20++nwr%5B%22shop%22=%22supermarket%22%5D(52.5,13.3,52.55,13.35);%0A%20%20);%0A%20%20out+body;%0A%20%20%3E;%0A%20%20out+skel+qt;`
+  let query = bottomLeft[0] + `%2C` + bottomLeft[1]  + `%2C` + topRight[0] + `%2C` + topRight[1];
+  //console.log(query);
   loadLayerWithGis(peopleLayer, encodeURI(query), peopleRTree);
 }
 
 
 function loadLayerWithGis(oLayer, oQuery, oRIndex) {
   showLoader();
-  fetch("https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/PLZ_Gebiete/FeatureServer/0/query?where=1%3D1&outFields=*&geometry=13.144%2C52.467%2C13.666%2C52.541&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson", {
+  Query='13.3%2C52.5%2C13.35%2C52.55';
+  //console.log(Query);
+  fetch("https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/PLZ_Gebiete/FeatureServer/0/query?where=1%3D1&outFields=*&geometry="+Query+"&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson", {
     //"body": oQuery,
     "method": "POST"
   }).then(res => res.json()).then(oResult => {

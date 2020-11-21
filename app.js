@@ -2,10 +2,12 @@ const showIntermediatePoints = false;
 
 const parkingLotRTree = new rbush();
 const superMarketRTree = new rbush();
+const peopleRTree = new rbush();
 const sectionText = document.getElementById("SECTIONID");
 const parkingText = document.getElementById("INFOPARKING");
 const backButton = document.getElementById("back-id");
 const forwardButton = document.getElementById("forward-id");
+
 
 const INITIAL_VIEW_STATE = {
   longitude: 13.302428631992042,
@@ -73,6 +75,21 @@ const superMarketLayer = new deck.GeoJsonLayer({
   getElevation: 20
 });
 
+const peopleLayer = new deck.PolygonLayer({
+  id: 'people-layer',
+  pickable: true,
+  stroked: false,
+  filled: true,
+  extruded: true,
+  lineWidthScale: 20,
+  lineWidthMinPixels: 2,
+  getFillColor: [180, 130, 30, 200],
+  getLineColor: _ => [160, 160, 180, 200],
+  getRadius: 5,
+  getLineWidth: 1,
+  getElevation: 20
+});
+
 const ICON_MAPPING = {
   marker: {
     x: 0,
@@ -134,6 +151,53 @@ function loadSuperMarkets() {
   loadLayerWithOverpass(superMarketLayer, encodeURI(query), superMarketRTree);
 }
 
+function loadPeople() {
+  let query = `data=%5Bout:json%5D%5Btimeout:50%5D;%0A%20%20(%0A%20%20++nwr%5B%22shop%22=%22supermarket%22%5D(52.5,13.3,52.55,13.35);%0A%20%20);%0A%20%20out+body;%0A%20%20%3E;%0A%20%20out+skel+qt;`
+  loadLayerWithGis(peopleLayer, encodeURI(query), peopleRTree);
+}
+
+
+function loadLayerWithGis(oLayer, oQuery, oRIndex) {
+  showLoader();
+  fetch("https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/PLZ_Gebiete/FeatureServer/0/query?where=1%3D1&outFields=*&geometry=13.144%2C52.467%2C13.666%2C52.541&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson", {
+    //"body": oQuery,
+    "method": "POST"
+  }).then(res => res.json()).then(oResult => {
+    console.log("xsfsdf",oResult);
+   // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
+    oFeatureCollection=oResult;
+    console.log("f",oFeatureCollection);
+    //https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/PLZ_Gebiete/FeatureServer/0/query?outFields=*&where=1%3D1
+    for (let oFeature of oFeatureCollection.features) {
+      if (oFeature.geometry.type == "Point") {
+        oRIndex.insert({
+          "minX": oFeature.geometry.coordinates[0],
+          "minY": oFeature.geometry.coordinates[1],
+          "maxX": oFeature.geometry.coordinates[0],
+          "maxY": oFeature.geometry.coordinates[1],
+          "feature": oFeature
+        });
+      }
+    }
+
+    oLayer.updateState(
+      {
+        props: {
+          data: oFeatureCollection,
+        },
+        changeFlags: { dataChanged: true }
+      }
+    );
+
+    hideLoader();
+  }).catch(e => {
+    console.error(e);
+  });
+}
+
+
+
+
 function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
   showLoader();
   fetch("https://lz4.overpass-api.de/api/interpreter", {
@@ -141,6 +205,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
     "method": "POST"
   }).then(res => res.json()).then(oResult => {
     let oFeatureCollection = osmtogeojson(oResult);
+    console.log("1",oFeatureCollection);
 
     for (let oFeature of oFeatureCollection.features) {
       if (oFeature.geometry.type == "Point") {
@@ -167,6 +232,10 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
     console.error(e);
   });
 }
+
+
+
+
 let intermediateOptimizationPoints = [];
 
 function optimizeLocation(start, rTree) {
@@ -234,7 +303,7 @@ let deckMap = new deck.DeckGL({
     latitude: 52.50131842240836,
     zoom: 15
   },
-  layers: [parkingLotLayer, superMarketLayer],
+  layers: [parkingLotLayer, superMarketLayer, peopleLayer],
   controller: true,
   onViewStateChange: ({ viewState }) => {
     deckMap.setProps({viewState})
@@ -248,6 +317,7 @@ let deckMap = new deck.DeckGL({
   onWebGLInitialized: () => {
     loadParkingLots();
     loadSuperMarkets();
+    loadPeople();
   },
   onDragEnd: () => {
     let start = [map.getCenter().lng, map.getCenter().lat];

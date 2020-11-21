@@ -4,6 +4,8 @@ const parkingLotRTree = new rbush();
 const superMarketRTree = new rbush();
 const sectionText = document.getElementById("SECTIONID");
 const parkingText = document.getElementById("INFOPARKING");
+const backButton = document.getElementById("back-id");
+const forwardButton = document.getElementById("forward-id");
 
 const INITIAL_VIEW_STATE = {
   longitude: 13.302428631992042,
@@ -251,12 +253,12 @@ let deckMap = new deck.DeckGL({
   }*/
 });
 let currentPoint = 0;
-document.getElementById("back-id").addEventListener("click", _ => {
+backButton.addEventListener("click", _ => {
   currentPoint--;
   flyToPoint(currentPoint);
 });
 
-document.getElementById("forward-id").addEventListener("click", _ => {
+forwardButton.addEventListener("click", _ => {
   currentPoint++
   flyToPoint(currentPoint);
 })

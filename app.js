@@ -9,7 +9,7 @@ const backButton = document.getElementById("back-id");
 const forwardButton = document.getElementById("forward-id");
 const factory = new jsts.geom.GeometryFactory();
 
-var aSortedDinstanceParkingLotSuperMarket;
+var aSortedDistanceParkingLotSuperMarket;
 
 
 const COLOR_SCALE = [
@@ -28,7 +28,8 @@ const COLOR_SCALE = [
   [252, 78, 42],
   [227, 26, 28],
   [189, 0, 38],
-  [128, 0, 38]
+  [100, 0, 38],
+  [20, 0, 38]
 ];
 
 const INITIAL_VIEW_STATE = {
@@ -120,11 +121,11 @@ const peopleLayer = new deck.GeoJsonLayer({
   getLineColor: [255, 255, 255],
   getRadius: 5,
   getLineWidth: 1, 
-  getTooltip
+
 });
 
 function colorScale(x) {
-  const i = Math.round(x * 7) + 4;
+  const i = Math.round(x * 1) + 100;
   if (x < 0) {
     return COLOR_SCALE[i] || COLOR_SCALE[0];
   }
@@ -132,10 +133,9 @@ function colorScale(x) {
 }
 
 function getTooltip({object}) {
-  return object && `Average Property Value
-    ${object.properties.qkm}
-    Growth
-    ${Math.round(object.properties.einwohner * 10)}`;
+  return object && `
+    Population/qkm
+    ${Math.round(object.properties.einwohner / object.properties.qkm )}`;
 }
 
 
@@ -381,9 +381,9 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
       aDistanceParkingLotSuperMarket.push({"distance": distance, "superMarket":oSuperMarket, "parkingLot":oParkingLot})
     }
   }
-  aSortedDinstanceParkingLotSuperMarket = aDistanceParkingLotSuperMarket.sort((a,b) => a.distance-b.distance);
+  aSortedDistanceParkingLotSuperMarket = aDistanceParkingLotSuperMarket.sort((a,b) => a.distance-b.distance);
   
-  return aSortedDinstanceParkingLotSuperMarket;
+  return aSortedDistanceParkingLotSuperMarket;
 };
 
 // Currently not used anymore
@@ -424,6 +424,7 @@ let deckMap = new deck.DeckGL({
     zoom: 15
   },
   layers: [parkingLotLayer, superMarketLayer, peopleLayer],
+  getTooltip,
   controller: true,
   onViewStateChange: ({ viewState }) => {
     deckMap.setProps({ viewState })
@@ -461,14 +462,17 @@ forwardButton.addEventListener("click", _ => {
 
 const flyToPoint = currentIndex => {
   let currentPoint2;
-  let feature = aSortedDinstanceParkingLotSuperMarket;
+  let feature = aSortedDistanceParkingLotSuperMarket;
   if (currentIndex > feature.length || currentIndex < 0) {
+    backButton.disabled = true
     currentIndex=currentPoint=0;
+  } else {
+    backButton.disabled = false
   }
   try {
-    let featurePoint = aSortedDinstanceParkingLotSuperMarket[currentIndex].superMarket.feature;
+    let featurePoint = aSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.feature;
     currentPoint2 = featurePoint.geometry.coordinates;
-    getParkingSpaceInfo({"object": aSortedDinstanceParkingLotSuperMarket[currentIndex].parkingLot.feature}, aSortedDinstanceParkingLotSuperMarket[currentIndex].superMarket.feature);
+    getParkingSpaceInfo({"object": aSortedDistanceParkingLotSuperMarket[currentIndex].parkingLot.feature}, aSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.feature);
   } catch (error) {
     console.log(error);
   }

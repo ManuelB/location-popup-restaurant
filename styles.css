@@ -16,7 +16,6 @@ html, body, #container, #map {
   max-width: 30rem;
   z-index: 2;
   overflow-wrap: break-word;
-  height: 80vh;
 }
 
 .box {
@@ -31,10 +30,10 @@ html, body, #container, #map {
   background-color: #ffda77; 
 }
 .box-3 {
-  background-color: #ffda77; 
+  background-color: #fbf6f0; 
 }
 .box-4 {
-  background-color: #ffda77; 
+  background-color: #aee6e6; 
 }
 
 .open-sans {
@@ -47,29 +46,32 @@ html, body, #container, #map {
 }
 
 .current-location {
+  opacity: 0.9;
   font-size: 2em;
   line-height: 1.6;
-  height: 5rem;
+  min-height: 5rem;
 }
 
 .btn {
-  position: relative;
-  font-size: 2em;
+  font-size: 1.3em;
   display: block;
-  margin: 30px auto;
-  padding: 10;
-
-  overflow: hidden;
-
+  float: left;
+  padding: 0.3rem 0;
   border-width: 0;
-  outline: none;
-  border-radius: 2px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
-  
   background-color: #2ecc71;
   color: #ecf0f1;
-  
   transition: background-color .3s;
+  width: 50%;
+  box-sizing: border-box;
+  margin: 0;  
+  transition: background-color .3s;
+  height: 100%;
+}
+.btn.left {
+  border-bottom-left-radius: 1rem;
+}
+.btn.right {
+  border-bottom-right-radius: 1rem;
 }
 
 .btn:hover, .btn:focus {
@@ -161,6 +163,8 @@ h2 {
   background-color: #c0392b;
 }
 .footer-bar {
-  position: relative;
+  position: absolute;
   bottom: 0;
+  height: 3rem;
+  width: 100%;
 }

@@ -16,7 +16,24 @@ const INITIAL_VIEW_STATE = {
   latitude: 52.50131842240836,
   zoom: 15
 }
+const COLOR_SCALE = [
+  // negative
+  [65, 182, 196],
+  [127, 205, 187],
+  [199, 233, 180],
+  [237, 248, 177],
 
+  // positive
+  [255, 255, 204],
+  [255, 237, 160],
+  [254, 217, 118],
+  [254, 178, 76],
+  [253, 141, 60],
+  [252, 78, 42],
+  [227, 26, 28],
+  [189, 0, 38],
+  [128, 0, 38]
+];
 // Add Mapbox GL for the basemap. It's not a requirement if you don't need a basemap.
 const map = new mapboxgl.Map({
   container: 'map',
@@ -92,10 +109,6 @@ const peopleLayer = new deck.GeoJsonLayer({
   extruded: true,
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
-  //getPolygon: d => d.geometry.coordinates,
-  //getElevation: d => d.properties.einwohner / d.properties.qkm / 10,
-  //getFillColor: d => [d.properties.einwohner / d.properties.qkm / 60, 140, 0],
-  //getLineColor: _ => [160, 160, 180],
   getElevation: d => Math.sqrt(d.properties.qkm/d.properties.einwohner) * 10,
   getFillColor: d => colorScale(d.properties.qkm/d.properties.einwohner),
   getLineColor: [255, 255, 255],
@@ -214,6 +227,13 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
   });
 }
 
+function colorScale(x) {
+  const i = Math.round(x * 7) + 4;
+  if (x < 0) {
+    return COLOR_SCALE[i] || COLOR_SCALE[0];
+  }
+  return COLOR_SCALE[i] || COLOR_SCALE[COLOR_SCALE.length - 1];
+}
 
 
 

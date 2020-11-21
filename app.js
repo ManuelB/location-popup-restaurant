@@ -1,4 +1,4 @@
-const showIntermediatePoints = false;
+const showIntermediatePoints = true;
 
 const parkingLotRTree = new rbush();
 const superMarketRTree = new rbush();
@@ -7,6 +7,7 @@ const sectionText = document.getElementById("SECTIONID");
 const parkingText = document.getElementById("INFOPARKING");
 const backButton = document.getElementById("back-id");
 const forwardButton = document.getElementById("forward-id");
+const factory = new jsts.geom.GeometryFactory();
 
 
 const INITIAL_VIEW_STATE = {
@@ -23,25 +24,32 @@ const map = new mapboxgl.Map({
   center: [INITIAL_VIEW_STATE.longitude, INITIAL_VIEW_STATE.latitude],
   zoom: INITIAL_VIEW_STATE.zoom
 });
-
+const listInfo = ["name", "opening_hours", "website", "addr:street"];
 const getParkingSpaceInfo = evt => {
   let parkingSpotInfos = evt.object.properties;
-  const factory = new jsts.geom.GeometryFactory();
   let coord = evt.object.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
   //console.log(coord);
   let areaParkingSpot = factory.createPolygon(coord).getArea();
   if (parkingSpotInfos) {
-    let txt ="";
-    // for (const element of Object.keys(parkingSpotInfos)) {
-    //   txt += element;
-    // }
-    Object.entries(parkingSpotInfos).forEach(([key,value]) => {
-      txt += `<li>${key}: ${value}</li>`
+    let txt = "";
+    Object.entries(parkingSpotInfos).forEach(([key, value]) => {
+      if (listInfo.includes(key)) {
+        if (key==="name") {
+          key= "Kette";
+        }
+        if (key==="opening_hours") {
+          key= "Öffnungszeiten";
+        }
+        if (key==="addr:street") {
+          key= "Straße";
+        }
+        txt += `<li>${key}: ${value}</li>`
+      }
     })
-    parkingText.innerHTML =  JSON.stringify(parkingSpotInfos, undefined, 2);
+    parkingText.innerHTML = JSON.stringify(parkingSpotInfos, undefined, 2);
 
     let areaqm = areaParkingSpot * 1000000000;
-    parkingText.innerHTML = `<ul>${txt}</ul>`+ `Größe: ${areaqm} m²`;
+    parkingText.innerHTML = `<ul>${txt}</ul>` + `Größe Parkplatz: ${areaqm.toFixed()} m²`;
   }
 }
 const parkingLotLayer = new deck.GeoJsonLayer({
@@ -108,8 +116,6 @@ const getMapIcon = () => {
 const getCoordinates = d => {
   return d.coordinates;
 }
-
-
 
 let bottomLeft = [13.3, 52.5];
 let topRight = [13.35, 52.55];
@@ -216,6 +222,17 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
           "maxY": oFeature.geometry.coordinates[1],
           "feature": oFeature
         });
+      } else if(oFeature.geometry.type == "Polygon") {
+        let coord = oFeature.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
+        let oPolygon = factory.createPolygon(coord);
+        let oCenter = oPolygon.getCentroid().getCoordinate();
+        oRIndex.insert({
+          "minX": oCenter.x,
+          "minY": oCenter.y,
+          "maxX": oCenter.x,
+          "maxY": oCenter.y,
+          "feature": {"geometry": {"coordinates": [oCenter.x, oCenter.y]}}
+        });
       }
     }
 
@@ -238,7 +255,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
 
 let intermediateOptimizationPoints = [];
 
-function optimizeLocation(start, rTree) {
+function optimizeLocation(start, rTrees) {
   const scorePoint = tf.tensor1d([start[0], start[1]]).variable();
   intermediateOptimizationPoints = [];
   // finds the closest parking lot
@@ -251,16 +268,16 @@ function optimizeLocation(start, rTree) {
     let pointCoordinates = [scorePoint.dataSync()[0], scorePoint.dataSync()[1]];
     intermediateOptimizationPoints.push(pointCoordinates);
     // console.log(pointCoordinates);
-    let closestFeature = knn(rTree, pointCoordinates[0], pointCoordinates[1], 1);
+    let closestFeatures = rTrees.map(rTree => knn(rTree, pointCoordinates[0], pointCoordinates[1], 1));
     // console.log(closestFeature);
-    if (closestFeature) {
-      // distance to start point
-      var squaredDifference = tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].feature.geometry.coordinates)).sum().sqrt();
-      // console.log(squaredDifference.dataSync()[0]);
-      return squaredDifference;
-    } else {
-      return tf.tensor1d([Infinity]);
+    // distance to start point
+    let closestFeature = closestFeatures.pop();
+    let squaredDifference = tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].feature.geometry.coordinates)).sum().sqrt();
+    for(closestFeature of closestFeatures) {
+      squaredDifference.add(tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].feature.geometry.coordinates)).sum().sqrt());
     }
+    // console.log(squaredDifference.dataSync()[0]);
+    return squaredDifference;
   };
 
   const learningRate = 0.00005;
@@ -269,7 +286,7 @@ function optimizeLocation(start, rTree) {
     optimizer.minimize(scoreOfCurrentCoordinates);
   }
   let intermediateLocationLayer;
-  if(showIntermediatePoints) {
+  if (showIntermediatePoints) {
     intermediateLocationLayer = new deck.IconLayer({
       id: 'intermediate-location-layer',
       pickable: true,
@@ -290,10 +307,39 @@ function optimizeLocation(start, rTree) {
 
   var optimizedLocation = scorePoint.dataSync();
 
-  return {location: optimizedLocation, layer: intermediateLocationLayer};
+  return { location: optimizedLocation, layer: intermediateLocationLayer };
 
 }
 
+const optimize = () => {
+  let start = [map.getCenter().lng, map.getCenter().lat];
+  let optimizedLocation = optimizeLocation(start, [superMarketRTree, parkingLotRTree]);
+  let optimizedLocationLayer = new deck.IconLayer({
+    id: 'optimized-location-layer',
+    pickable: true,
+    // iconAtlas and iconMapping are required
+    // getIcon: return a string
+    iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
+    iconMapping: ICON_MAPPING,
+    getIcon: getMapIcon,
+    sizeScale: 15,
+    getPosition: getCoordinates,
+    getSize: _ => 5,
+    getColor: _ => [100, 140, 0],
+    data: [{ "coordinates": optimizedLocation.location }]
+  });
+
+  let aLayers = [parkingLotLayer, superMarketLayer, optimizedLocationLayer];
+  if (showIntermediatePoints) {
+    aLayers.push(optimizedLocation.layer);
+  }
+
+  deckMap.setProps({
+    layers: aLayers
+  });
+  //loadParkingLots();
+  //loadSuperMarkets();
+}
 
 // Create Deck.GL map
 let deckMap = new deck.DeckGL({
@@ -306,7 +352,7 @@ let deckMap = new deck.DeckGL({
   layers: [parkingLotLayer, superMarketLayer, peopleLayer],
   controller: true,
   onViewStateChange: ({ viewState }) => {
-    deckMap.setProps({viewState})
+    deckMap.setProps({ viewState })
     map.jumpTo({
       center: [viewState.longitude, viewState.latitude],
       zoom: viewState.zoom,
@@ -319,40 +365,14 @@ let deckMap = new deck.DeckGL({
     loadSuperMarkets();
     loadPeople();
   },
-  onDragEnd: () => {
-    let start = [map.getCenter().lng, map.getCenter().lat];
-    let optimizedLocation = optimizeLocation(start, superMarketRTree);
-    sectionText.innerText = `Current optimized location ${optimizedLocation[0]}:${optimizedLocation[1]} `;
-    let optimizedLocationLayer = new deck.IconLayer({
-      id: 'optimized-location-layer',
-      pickable: true,
-      // iconAtlas and iconMapping are required
-      // getIcon: return a string
-      iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
-      iconMapping: ICON_MAPPING,
-      getIcon: getMapIcon,
-      sizeScale: 15,
-      getPosition: getCoordinates,
-      getSize: _ => 5,
-      getColor: _ => [100, 140, 0],
-      data: [{ "coordinates": optimizedLocation.location }]
-    });
+  onDragEnd: optimize,
 
-    let aLayers = [parkingLotLayer, superMarketLayer, optimizedLocationLayer];
-    if(showIntermediatePoints) {
-      aLayers.push(optimizedLocation.layer);
-    }
-
-    deckMap.setProps({
-      layers: aLayers
-    });
-    //loadParkingLots();
-    //loadSuperMarkets();
-  },
   /*shouldUpdateState: (props, oldProps, context, changeFlags) =>{
       alert("Redrawing is done");
   }*/
 });
+
+
 let currentPoint = 0;
 backButton.addEventListener("click", _ => {
   currentPoint--;
@@ -365,24 +385,37 @@ forwardButton.addEventListener("click", _ => {
 })
 
 const flyToPoint = currentIndex => {
-  let currentPoint2 = intermediateOptimizationPoints[currentIndex];
- if (currentPoint2) {
-   console.log(`${currentPoint2[0]} : ${currentPoint2[1]}`);
-   deckMap.setProps({
-     viewState: {
-       longitude: currentPoint2[0],
-       latitude: currentPoint2[1],
-       "zoom": 16,
-       "minZoom": 5,
-       "maxZoom": 20,
-       "pitch": 40.5,
-       "bearing": -27.396674584323023,
-       transitionInterpolator: new deck.FlyToInterpolator(),
-       transitionDuration: '200'
-     }
-   });
- }
- else {
-   console.log("nothing to show");
- }
+  let currentPoint2;
+  let feature = superMarketLayer.state.features.polygonFeatures;
+  if (currentIndex > feature.length || currentIndex < 0) {
+    currentIndex=currentPoint=0;
+  }
+  try {
+    let featurePoint = superMarketLayer.state.features.pointFeatures[currentIndex];
+    currentPoint2 = featurePoint.geometry.coordinates;
+    getParkingSpaceInfo(feature[currentIndex].__source);
+  } catch (error) {
+    console.log(error);
+  }
+  if (currentPoint2) {
+    console.log(`${currentPoint2[0]} : ${currentPoint2[1]}`);
+    deckMap.setProps({
+      viewState: {
+        longitude: currentPoint2[0],
+        latitude: currentPoint2[1],
+        "zoom": 16,
+        "minZoom": 5,
+        "maxZoom": 20,
+        "pitch": 40.5,
+        "bearing": -27.396674584323023,
+        transitionInterpolator: new deck.FlyToInterpolator(),
+        transitionDuration: '1000'
+      }
+    });
+    //TODO start optimize() again 
+   // setTimeout(_=>{ deckMap.redraw(); }, 2000);
+  }
+  else {
+    console.log("nothing to show");
+  }
 }

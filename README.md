@@ -13,7 +13,7 @@ This project uses the following data sources and technologies to find a good pla
 
 # Screenshots
 
- * ![Screenshot 1 ](./screenshots/screenshots-1.png)
- * ![Screenshot 2 ](./screenshots/screenshots-2.png)
- * ![Screenshot 3 ](./screenshots/screenshots-3.png)
- * ![Screenshot 4 ](./screenshots/screenshots-4.png)
+ * ![Screenshot 1 ](screenshots/screenshot-1.png)
+ * ![Screenshot 2 ](screenshots/screenshot-2.png)
+ * ![Screenshot 3 ](screenshots/screenshot-3.png)
+ * ![Screenshot 4 ](screenshots/screenshot-4.png)

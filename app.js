@@ -9,28 +9,7 @@ const backButton = document.getElementById("back-id");
 const forwardButton = document.getElementById("forward-id");
 const factory = new jsts.geom.GeometryFactory();
 
-<<<<<<< HEAD
-const COLOR_SCALE = [
-  // negative
-  [65, 182, 196],
-  [127, 205, 187],
-  [199, 233, 180],
-  [237, 248, 177],
-
-  // positive
-  [255, 255, 204],
-  [255, 237, 160],
-  [254, 217, 118],
-  [254, 178, 76],
-  [253, 141, 60],
-  [252, 78, 42],
-  [227, 26, 28],
-  [189, 0, 38],
-  [128, 0, 38]
-];
-=======
 var aSortedDinstanceParkingLotSuperMarket;
->>>>>>> d2e099df63438f2cc33a0a57602be679047ce37b
 
 const INITIAL_VIEW_STATE = {
   longitude: 13.302428631992042,
@@ -117,8 +96,8 @@ const peopleLayer = new deck.GeoJsonLayer({
   //getElevation: d => d.properties.einwohner / d.properties.qkm / 10,
   //getFillColor: d => [d.properties.einwohner / d.properties.qkm / 60, 140, 0],
   //getLineColor: _ => [160, 160, 180],
-  getElevation: d => Math.sqrt(d.properties.qkm) * 10,
-  getFillColor: d => colorScale(d.properties.einwohner),
+  getElevation: d => Math.sqrt(d.properties.qkm/d.properties.einwohner) * 10,
+  getFillColor: d => colorScale(d.properties.qkm/d.properties.einwohner),
   getLineColor: [255, 255, 255],
   getRadius: 5,
   getLineWidth: 1

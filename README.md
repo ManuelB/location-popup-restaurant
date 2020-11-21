@@ -10,3 +10,10 @@ This project uses the following data sources and technologies to find a good pla
  * [Deck.gl for 3D visualization](https://deck.gl/)
 
 [Demo](https://manuelb.github.io/location-popup-restaurant/)
+
+# Screenshots
+
+ * ![Screenshot 1 ](screenshots/screenshots-1.png)
+ * ![Screenshot 2 ](screenshots/screenshots-2.png)
+ * ![Screenshot 3 ](screenshots/screenshots-3.png)
+ * ![Screenshot 4 ](screenshots/screenshots-4.png)

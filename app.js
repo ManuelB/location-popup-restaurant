@@ -13,13 +13,7 @@ var aSortedDistanceParkingLotSuperMarket;
 
 
 const COLOR_SCALE = [
-  // negative
-  [65, 182, 196],
-  [127, 205, 187],
-  [199, 233, 180],
-  [237, 248, 177],
-
-  // positive
+  
   [255, 255, 204],
   [255, 237, 160],
   [254, 217, 118],
@@ -50,31 +44,13 @@ const listInfo = ["name", "opening_hours", "website", "addr:street"];
 const getParkingSpaceInfo = (evt, oSuperMarketFeature) => {
   let parkingSpotInfos = evt.object.properties;
   let coord = evt.object.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
-  //console.log(coord);
   let areaParkingSpot = factory.createPolygon(coord).getArea();
-  if (parkingSpotInfos) {
-    let txt = "";
-    if(oSuperMarketFeature) {
-      Object.entries(oSuperMarketFeature.properties).forEach(([key, value]) => {
-        if (listInfo.includes(key)) {
-          if (key==="name") {
-            key= "Kette";
-          }
-          if (key==="opening_hours") {
-            key= "Öffnungszeiten";
-          }
-          if (key==="addr:street") {
-            key= "Straße";
-          }
-          txt += `<li>${key}: ${value}</li>`
-        }
-      });
-    }
-    parkingText.innerHTML = JSON.stringify(parkingSpotInfos, undefined, 2);
-
-    let areaqm = areaParkingSpot * 1000000000;
-    parkingText.innerHTML = `<ul>${txt}</ul>` + `Gr&ouml;&szlig;e Parkplatz: ${areaqm.toFixed()} m²`;
-  }
+  
+  document.getElementById("revenue-potential").innerHTML = (Math.rand()*1000).toFixed()+" €";
+  document.getElementById("daily-sales").innerHTML = (Math.rand()*1000).toFixed()+" €";
+  document.getElementById("supermarket-name").innerHTML = oSuperMarketFeature.properties.name;
+  let areaqm = areaParkingSpot * 1000000000;
+  document.getElementById("parkinglot-area").innerHTML = `${areaqm.toFixed()} m²`; 
 }
 const parkingLotLayer = new deck.GeoJsonLayer({
   id: 'parking-lot-layer',
@@ -116,8 +92,8 @@ const peopleLayer = new deck.GeoJsonLayer({
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
   opacity:0.05,
-  getElevation: d => Math.sqrt(d.properties.einwohner  / d.properties.qkm) * 0,
-  getFillColor: d => colorScale((d.properties.einwohner / d.properties.qkm)),
+  getElevation: d => Math.sqrt(d.properties.einwohner  / d.properties.qkm) * 0.1,
+  getFillColor: d => colorScale((d.properties.einwohner / d.properties.qkm)/10000),
   getLineColor: [255, 255, 255],
   getRadius: 5,
   getLineWidth: 1, 
@@ -125,13 +101,14 @@ const peopleLayer = new deck.GeoJsonLayer({
 });
 
 function colorScale(x) {
-  const i = Math.round(x / 10000) + 1;
 
+  const i = Math.round(x * 1) + 4;
   if (x < 0) {
     return COLOR_SCALE[i] || COLOR_SCALE[0];
   }
   return COLOR_SCALE[i] || COLOR_SCALE[COLOR_SCALE.length - 1];
 }
+  
 
 function getTooltip({object}) {
   return object && `
@@ -305,67 +282,6 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
 }
 
 
-
-
-let intermediateOptimizationPoints = [];
-
-function optimizeLocation(start, rTrees) {
-  const scorePoint = tf.tensor1d([start[0], start[1]]).variable();
-  intermediateOptimizationPoints = [];
-  // finds the closest parking lot
-  // calculate distance
-  // TODO:
-  // use cumulative normal distribution function for judging distance
-  // - very close -> very good
-  // - far away -> we don't care
-  const scoreOfCurrentCoordinates = _ => {
-    let pointCoordinates = [scorePoint.dataSync()[0], scorePoint.dataSync()[1]];
-    intermediateOptimizationPoints.push(pointCoordinates);
-    // console.log(pointCoordinates);
-    let closestFeatures = rTrees.map(rTree => knn(rTree, pointCoordinates[0], pointCoordinates[1], 1));
-    // console.log(closestFeature);
-    // distance to start point
-    let closestFeature = closestFeatures.pop();
-    let squaredDifference = tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].point)).sum().sqrt();
-    for(closestFeature of closestFeatures) {
-      squaredDifference.add(tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].point)).sum().sqrt());
-    }
-    // console.log(squaredDifference.dataSync()[0]);
-    return squaredDifference;
-  };
-
-  const learningRate = 0.00005;
-  const optimizer = tf.train.sgd(learningRate);
-  for (let i = 0; i < 100; i++) {
-    optimizer.minimize(scoreOfCurrentCoordinates);
-  }
-  let intermediateLocationLayer;
-  if (showIntermediatePoints) {
-    intermediateLocationLayer = new deck.IconLayer({
-      id: 'intermediate-location-layer',
-      pickable: true,
-      // iconAtlas and iconMapping are required
-      // getIcon: return a string
-      iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
-      iconMapping: ICON_MAPPING,
-      getIcon: getMapIcon,
-      getPixelOffset: [64, 64],
-      sizeScale: 15,
-      getPosition: (d) => d,
-      getSize: _ => 2,
-      getColor: _ => [188, 188, 215],
-      opacity: 0.5 ,
-      data: intermediateOptimizationPoints
-    });
-  }
-
-
-  var optimizedLocation = scorePoint.dataSync();
-
-  return { location: optimizedLocation, layer: intermediateLocationLayer };
-
-}
-
 const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
   let start = [map.getCenter().lng, map.getCenter().lat];
   const amountOfNeigbhors = 10;
@@ -387,68 +303,6 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
   
   return aSortedDistanceParkingLotSuperMarket;
 };
-
-// Currently not used anymore
-const optimize = () => {
-  let start = [map.getCenter().lng, map.getCenter().lat];
-  let optimizedLocation = optimizeLocation(start, [superMarketRTree, parkingLotRTree]);
-  let optimizedLocationLayer = new deck.IconLayer({
-    id: 'optimized-location-layer',
-    pickable: true,
-    // iconAtlas and iconMapping are required
-    // getIcon: return a string
-    iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
-    iconMapping: ICON_MAPPING,
-    getIcon: getMapIcon,
-    sizeScale: 15,
-    getPosition: getCoordinates,
-    getSize: _ => 5,
-    getColor: _ => [90,90,90],
-    data: [{ "coordinates": optimizedLocation.location }]
-  });
-
-  let aLayers = [parkingLotLayer, superMarketLayer, optimizedLocationLayer];
-  if (showIntermediatePoints) {
-    aLayers.push(optimizedLocation.layer);
-  }
-
-  deckMap.setProps({
-    layers: aLayers
-  });
-}
-
-// Create Deck.GL map
-let deckMap = new deck.DeckGL({
-  mapStyle: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json',
-  initialViewState: {
-    longitude: 13.302428631992042,
-    latitude: 52.50131842240836,
-    zoom: 15
-  },
-  layers: [parkingLotLayer, superMarketLayer, peopleLayer],
-  getTooltip,
-  controller: true,
-  onViewStateChange: ({ viewState }) => {
-    deckMap.setProps({ viewState })
-    map.jumpTo({
-      center: [viewState.longitude, viewState.latitude],
-      zoom: viewState.zoom,
-      bearing: viewState.bearing,
-      pitch: viewState.pitch
-    });
-  },
-  onWebGLInitialized: () => {
-    Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {
-      calculateDistanceMatrixForSuperMarketsAndParkingLots();
-    })
-    loadPeople();
-  },
-  onDragEnd: calculateDistanceMatrixForSuperMarketsAndParkingLots,
-
-  /*shouldUpdateState: (props, oldProps, context, changeFlags) =>{
-      alert("Redrawing is done");
-  }*/
-});
 
 
 let currentPoint = 0;
@@ -493,8 +347,6 @@ const flyToPoint = currentIndex => {
         transitionDuration: '1000'
       }
     });
-    //TODO start optimize() again 
-   // setTimeout(_=>{ deckMap.redraw(); }, 2000);
   }
   else {
     console.log("nothing to show");

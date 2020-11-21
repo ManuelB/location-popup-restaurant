@@ -17,11 +17,8 @@ html, body, #container, #map {
   z-index: 2;
   overflow-wrap: break-word;
   text-align: center;
-}
-
-.box {
-  z-index: 2;
-  margin: 0 0 24px;
+  padding: 0 0 3rem 0;
+  text-align: center;
 }
 
 .box-1 {
@@ -43,7 +40,6 @@ html, body, #container, #map {
   font-weight: 400;
   margin-top: 0;
   margin-bottom: 0;
-  text-align: center;
 }
 
 .current-location {

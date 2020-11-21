@@ -208,7 +208,7 @@ function loadPeople() {
 
 function loadLayerWithGis(oLayer, oQuery, oRIndex) {
   showLoader();
-  Query='13.3%2C52.5%2C13.35%2C52.55';
+  let Query='13.3%2C52.5%2C13.35%2C52.55';
   //console.log(Query);
   fetch("https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/PLZ_Gebiete/FeatureServer/0/query?where=1%3D1&outFields=*&geometry="+Query+"&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson", {
     //"body": oQuery,

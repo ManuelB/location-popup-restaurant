@@ -11,11 +11,7 @@ const factory = new jsts.geom.GeometryFactory();
 
 var aSortedDinstanceParkingLotSuperMarket;
 
-const INITIAL_VIEW_STATE = {
-  longitude: 13.302428631992042,
-  latitude: 52.50131842240836,
-  zoom: 15
-}
+
 const COLOR_SCALE = [
   // negative
   [65, 182, 196],

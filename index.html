@@ -16,7 +16,7 @@
   <script src="https://unpkg.com/@esri/arcgis-to-geojson-utils"></script>
   <link rel="shortcut icon" type="image/jpg" href="favicon.ico"/>
   <meta charset='UTF-8' />
-  <title>CARTO deck.gl example</title>
+  <title>PopUp Places - FarmHack 2020</title>
 </head>
 
 <body>
@@ -26,20 +26,22 @@
       <div class="box">
         <header>
           <img width="250px" src="img/logo.png" alt="logo">
-          <img alt="" id="loader" src="https://upload.wikimedia.org/wikipedia/commons/b/bc/Refresh_icon.png" width="100px" height="100px"> 
+          <img alt="" id="loader" src="https://upload.wikimedia.org/wikipedia/commons/b/bc/Refresh_icon.png" width="20px" height="20px"> 
         </header>
         <section class="open-sans">
           <div class="separator"></div>
-          <div class="current-location" id = "SECTIONID"></div>
-          <div class="current-location">Supermärkte wechseln</div>
-          <button id="back-id" class="btn" type="button">
-            zurück
-          </button>
-          <button id="forward-id" class="btn" type="button">
-            vorwärts
-          </button>
-          <div class="current-location" >Supermarkt Infos:</div>
-          <div class="current-location" id = "INFOPARKING"></div>
+          <div class="current-location box-1" id="SECTIONID"></div>
+          <div class="current-location box-2">Supermärkte wechseln</div>
+          <div class="current-location box-3">Supermarkt Infos:</div>
+          <div class="current-location box-4" id = "INFOPARKING"></div>
+          <div class="footer-bar">
+            <button id="back-id" class="btn" type="button">
+              &larr; zurück
+            </button>
+            <button id="forward-id" class="btn" type="button">
+              vorwärts &rarr;
+            </button>
+          </div>
         </section>
       </div>
     </aside>

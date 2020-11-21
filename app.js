@@ -26,31 +26,33 @@ const map = new mapboxgl.Map({
   zoom: INITIAL_VIEW_STATE.zoom
 });
 const listInfo = ["name", "opening_hours", "website", "addr:street"];
-const getParkingSpaceInfo = evt => {
+const getParkingSpaceInfo = (evt, oSuperMarketFeature) => {
   let parkingSpotInfos = evt.object.properties;
   let coord = evt.object.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
   //console.log(coord);
   let areaParkingSpot = factory.createPolygon(coord).getArea();
   if (parkingSpotInfos) {
     let txt = "";
-    Object.entries(parkingSpotInfos).forEach(([key, value]) => {
-      if (listInfo.includes(key)) {
-        if (key==="name") {
-          key= "Kette";
+    if(oSuperMarketFeature) {
+      Object.entries(oSuperMarketFeature.properties).forEach(([key, value]) => {
+        if (listInfo.includes(key)) {
+          if (key==="name") {
+            key= "Kette";
+          }
+          if (key==="opening_hours") {
+            key= "Öffnungszeiten";
+          }
+          if (key==="addr:street") {
+            key= "Straße";
+          }
+          txt += `<li>${key}: ${value}</li>`
         }
-        if (key==="opening_hours") {
-          key= "Öffnungszeiten";
-        }
-        if (key==="addr:street") {
-          key= "Straße";
-        }
-        txt += `<li>${key}: ${value}</li>`
-      }
-    })
+      });
+    }
     parkingText.innerHTML = JSON.stringify(parkingSpotInfos, undefined, 2);
 
     let areaqm = areaParkingSpot * 1000000000;
-    parkingText.innerHTML = `<ul>${txt}</ul>` + `Größe Parkplatz: ${areaqm.toFixed()} m²`;
+    parkingText.innerHTML = `<ul>${txt}</ul>` + `Gr&ouml;&szlig;e Parkplatz: ${areaqm.toFixed()} m²`;
   }
 }
 const parkingLotLayer = new deck.GeoJsonLayer({
@@ -184,6 +186,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
           "minY": oFeature.geometry.coordinates[1],
           "maxX": oFeature.geometry.coordinates[0],
           "maxY": oFeature.geometry.coordinates[1],
+          "point": oFeature.geometry.coordinates,
           "feature": oFeature
         });
       }
@@ -223,6 +226,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
           "minY": oFeature.geometry.coordinates[1],
           "maxX": oFeature.geometry.coordinates[0],
           "maxY": oFeature.geometry.coordinates[1],
+          "point": oFeature.geometry.coordinates,
           "feature": oFeature
         });
       } else if(oFeature.geometry.type == "Polygon") {
@@ -234,7 +238,8 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
           "minY": oCenter.y,
           "maxX": oCenter.x,
           "maxY": oCenter.y,
-          "feature": {"geometry": {"coordinates": [oCenter.x, oCenter.y]}}
+          "point": [oCenter.x, oCenter.y],
+          "feature": oFeature
         });
       }
     }
@@ -276,9 +281,9 @@ function optimizeLocation(start, rTrees) {
     // console.log(closestFeature);
     // distance to start point
     let closestFeature = closestFeatures.pop();
-    let squaredDifference = tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].feature.geometry.coordinates)).sum().sqrt();
+    let squaredDifference = tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].point)).sum().sqrt();
     for(closestFeature of closestFeatures) {
-      squaredDifference.add(tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].feature.geometry.coordinates)).sum().sqrt());
+      squaredDifference.add(tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].point)).sum().sqrt());
     }
     // console.log(squaredDifference.dataSync()[0]);
     return squaredDifference;
@@ -327,13 +332,14 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
 
   for(let oSuperMarket of aSuperMarkets) {
     for(let oParkingLot of aParkingLots) {
-      const input1 =  factory.createPoint(new jsts.geom.Coordinate (oSuperMarket.feature.geometry.coordinates[0], oSuperMarket.feature.geometry.coordinates[1]));
-      const input2 =  factory.createPoint(new jsts.geom.Coordinate (oParkingLot.feature.geometry.coordinates[0], oParkingLot.feature.geometry.coordinates[1]));
+      const input1 =  factory.createPoint(new jsts.geom.Coordinate (oSuperMarket.point[0], oSuperMarket.point[1]));
+      const input2 =  factory.createPoint(new jsts.geom.Coordinate (oParkingLot.point[0], oParkingLot.point[1]));
       const distance = new jsts.operation.distance.DistanceOp( input1, input2).distance();
-      aDistanceParkingLotSuperMarket.push({"distance": distance, "superMarket":oSuperMarket, "oParkingLot":oParkingLot})
+      aDistanceParkingLotSuperMarket.push({"distance": distance, "superMarket":oSuperMarket, "parkingLot":oParkingLot})
     }
   }
   aSortedDinstanceParkingLotSuperMarket = aDistanceParkingLotSuperMarket.sort((a,b) => a.distance-b.distance);
+  
   return aSortedDinstanceParkingLotSuperMarket;
 };
 
@@ -419,7 +425,7 @@ const flyToPoint = currentIndex => {
   try {
     let featurePoint = aSortedDinstanceParkingLotSuperMarket[currentIndex].superMarket.feature;
     currentPoint2 = featurePoint.geometry.coordinates;
-    getParkingSpaceInfo(feature[currentIndex].__source);
+    getParkingSpaceInfo({"object": aSortedDinstanceParkingLotSuperMarket[currentIndex].parkingLot.feature}, aSortedDinstanceParkingLotSuperMarket[currentIndex].superMarket.feature);
   } catch (error) {
     console.log(error);
   }

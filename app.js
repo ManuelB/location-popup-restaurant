@@ -34,6 +34,13 @@ const COLOR_SCALE = [
   [189, 0, 38],
   [128, 0, 38]
 ];
+
+const INITIAL_VIEW_STATE = {
+  longitude: 13.302428631992042,
+  latitude: 52.50131842240836,
+  zoom: 15
+}
+
 // Add Mapbox GL for the basemap. It's not a requirement if you don't need a basemap.
 const map = new mapboxgl.Map({
   container: 'map',
@@ -207,7 +214,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
   }).then(res => res.json()).then(oResult => {
 
    // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
-    oFeatureCollection=oResult;
+    let oFeatureCollection=oResult;
     console.log("poly",oFeatureCollection);
 
     for (let oFeature of oFeatureCollection.features) {

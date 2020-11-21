@@ -1,4 +1,4 @@
-
+const showIntermediatePoints = false;
 
 const parkingLotRTree = new rbush();
 const superMarketRTree = new rbush();
@@ -81,7 +81,7 @@ const ICON_MAPPING = {
     height: 128,
     mask: true,
     anchorX: -64,
-    anchory: -64
+    anchorY: -64
   }
 };
 const getMapIcon = () => {
@@ -89,7 +89,6 @@ const getMapIcon = () => {
 }
 
 const getCoordinates = d => {
-  // debugger;
   return d.coordinates;
 }
 
@@ -182,25 +181,47 @@ function optimizeLocation(start, rTree) {
   const scoreOfCurrentCoordinates = _ => {
     let pointCoordinates = [scorePoint.dataSync()[0], scorePoint.dataSync()[1]];
     intermediateOptimizationPoints.push(pointCoordinates);
+    // console.log(pointCoordinates);
     let closestFeature = knn(rTree, pointCoordinates[0], pointCoordinates[1], 1);
+    // console.log(closestFeature);
     if (closestFeature) {
       // distance to start point
       var squaredDifference = tf.squaredDifference(scorePoint, tf.tensor1d(closestFeature[0].feature.geometry.coordinates)).sum().sqrt();
+      // console.log(squaredDifference.dataSync()[0]);
       return squaredDifference;
     } else {
       return tf.tensor1d([Infinity]);
     }
   };
 
-  const learningRate = 0.001;
+  const learningRate = 0.00005;
   const optimizer = tf.train.sgd(learningRate);
   for (let i = 0; i < 100; i++) {
     optimizer.minimize(scoreOfCurrentCoordinates);
   }
+  let intermediateLocationLayer;
+  if(showIntermediatePoints) {
+    intermediateLocationLayer = new deck.IconLayer({
+      id: 'intermediate-location-layer',
+      pickable: true,
+      // iconAtlas and iconMapping are required
+      // getIcon: return a string
+      iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
+      iconMapping: ICON_MAPPING,
+      getIcon: getMapIcon,
+      getPixelOffset: [64, 64],
+      sizeScale: 15,
+      getPosition: (d) => d,
+      getSize: _ => 2,
+      getColor: _ => [0, 0, 0],
+      data: intermediateOptimizationPoints
+    });
+  }
+
 
   var optimizedLocation = scorePoint.dataSync();
 
-  return optimizedLocation;
+  return {location: optimizedLocation, layer: intermediateLocationLayer};
 
 }
 
@@ -243,11 +264,16 @@ let deckMap = new deck.DeckGL({
       getPosition: getCoordinates,
       getSize: _ => 5,
       getColor: _ => [100, 140, 0],
-      data: [{ "coordinates": optimizedLocation }]
+      data: [{ "coordinates": optimizedLocation.location }]
     });
 
+    let aLayers = [parkingLotLayer, superMarketLayer, optimizedLocationLayer];
+    if(showIntermediatePoints) {
+      aLayers.push(optimizedLocation.layer);
+    }
+
     deckMap.setProps({
-      layers: [parkingLotLayer, superMarketLayer, optimizedLocationLayer]
+      layers: aLayers
     });
     //loadParkingLots();
     //loadSuperMarkets();

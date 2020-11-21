@@ -3,6 +3,8 @@ const showIntermediatePoints = true;
 const parkingLotRTree = new rbush();
 const superMarketRTree = new rbush();
 const peopleRTree = new rbush();
+const FastFoodRTree = new rbush();
+
 const sectionText = document.getElementById("SECTIONID");
 const parkingText = document.getElementById("INFOPARKING");
 const backButton = document.getElementById("back-id");
@@ -14,6 +16,7 @@ const revenue = document.getElementById("revenue-potential");
 const dailySales = document.getElementById("daily-sales");
 const supermarketName = document.getElementById("supermarket-name");
 var aSortedDistanceParkingLotSuperMarket;
+var aSortedDistanceParkingLotFastFood;
 
 const COLOR_SCALE = [
   // negative
@@ -87,6 +90,23 @@ const parkingLotLayer = new deck.GeoJsonLayer({
   onClick: evt => getParkingSpaceInfo(null, evt)
 });
 
+
+const FastFoodLayer = new deck.GeoJsonLayer({
+  id: 'fast-food-layer',
+  pickable: true,
+  stroked: false,
+  filled: true,
+  extruded: true,
+  lineWidthScale: 20,
+  lineWidthMinPixels: 2,
+  getFillColor: [0, 150, 0, 200],
+  getLineColor: _ => [160, 160, 180, 200],
+  getRadius: 5,
+  getLineWidth: 1,
+  getElevation: 2,
+  //onClick: evt => getParkingSpaceInfo(null, evt)
+});
+
 const superMarketLayer = new deck.GeoJsonLayer({
   id: 'super-market-layer',
   pickable: true,
@@ -112,7 +132,7 @@ const peopleLayer = new deck.GeoJsonLayer({
   lineWidthMinPixels: 2,
   opacity: 0.07,
   getElevation: d => Math.sqrt(d.properties.einwohner / d.properties.qkm) * 0.1,
-  getFillColor: d => colorScale((d.properties.einwohner / d.properties.qkm) / 5000),
+  getFillColor: d => colorScale((d.properties.einwohner / d.properties.qkm) / 4000),
   getLineColor: [255, 255, 255],
   getRadius: 5,
   getLineWidth: 1,
@@ -177,6 +197,7 @@ function loadParkingLots() {
   out+skel+qt;`
   return loadLayerWithOverpass(parkingLotLayer, encodeURI(query), parkingLotRTree);
 }
+
 function loadSuperMarkets() {
   let query = `data=[out:json][timeout:50];
   (
@@ -186,6 +207,17 @@ function loadSuperMarkets() {
   >;
   out+skel+qt;`
   return loadLayerWithOverpass(superMarketLayer, encodeURI(query), superMarketRTree);
+}
+
+function loadFastFood() {
+  let query = `data=[out:json][timeout:50];
+  (
+  ++nwr["amenity"="fast_food"](`+ bottomLeft[1] + `,` + bottomLeft[0] + `,` + topRight[1] + `,` + topRight[0] + `);
+  );
+  out+body;
+  >;
+  out+skel+qt;`
+  return loadLayerWithOverpass(FastFoodLayer, encodeURI(query), FastFoodRTree);
 }
 
 function loadPeople() {
@@ -240,7 +272,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
     "method": "POST"
   }).then(res => res.json()).then(oResult => {
     let oFeatureCollection = osmtogeojson(oResult);
-
+    console.log(oFeatureCollection);
 
     for (let oFeature of oFeatureCollection.features) {
       if (oFeature.geometry.type == "Point") {
@@ -283,6 +315,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
 }
 
 
+
 let aUniqueSortedDistanceParkingLotSuperMarket = [];
 const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
   let start = [map.getCenter().lng, map.getCenter().lat];
@@ -290,18 +323,38 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
 
   let aSuperMarkets = knn(superMarketRTree, start[0], start[1], amountOfNeigbhors);
   let aParkingLots = knn(parkingLotRTree, start[0], start[1], amountOfNeigbhors);
+  let aFastFoodLots = knn(FastFoodRTree, start[0], start[1], amountOfNeigbhors);
 
   const aDistanceParkingLotSuperMarket = [];
-
+  const aDistanceParkingLotFastFood = [];
+  var i = 0;
   for (let oSuperMarket of aSuperMarkets) {
     for (let oParkingLot of aParkingLots) {
+     
       const input1 = factory.createPoint(new jsts.geom.Coordinate(oSuperMarket.point[0], oSuperMarket.point[1]));
       const input2 = factory.createPoint(new jsts.geom.Coordinate(oParkingLot.point[0], oParkingLot.point[1]));
       const distance = new jsts.operation.distance.DistanceOp(input1, input2).distance();
-      aDistanceParkingLotSuperMarket.push({ "distance": distance, "superMarket": oSuperMarket, "parkingLot": oParkingLot })
-    }
+      aDistanceParkingLotSuperMarket.push({ "id": i++ ,"distance": distance, "superMarket": oSuperMarket, "parkingLot": oParkingLot})
+   }
+}
+
+  for (let oParkingLot of aParkingLots) {
+    for (let oFastFoodLot of aFastFoodLots) {
+    const input2 = factory.createPoint(new jsts.geom.Coordinate(oParkingLot.point[0], oParkingLot.point[1]));
+    const input3 = factory.createPoint(new jsts.geom.Coordinate(oFastFoodLot.point[0], oFastFoodLot.point[1]));
+    const distance2 = new jsts.operation.distance.DistanceOp(input2, input3).distance();
+   // console.log(distance);
+    aDistanceParkingLotFastFood.push({ "id": i++ , "distance": distance2, "parkingLot": oParkingLot, "FastFood": oFastFoodLot})
   }
+}
+
   aSortedDistanceParkingLotSuperMarket = aDistanceParkingLotSuperMarket.sort((a, b) => a.distance - b.distance);
+  console.log(aSortedDistanceParkingLotSuperMarket[0]);
+  console.log(aSortedDistanceParkingLotSuperMarket[1]);
+  aSortedDistanceParkingLotFastFood = aDistanceParkingLotFastFood.sort((a, b) => a.distance + b.distance);
+  console.log(aSortedDistanceParkingLotFastFood[0]);
+  console.log(aSortedDistanceParkingLotFastFood[1]);
+
 
   let mMapAlreadyIn = {};
   for (let oItems of aSortedDistanceParkingLotSuperMarket) {
@@ -324,7 +377,7 @@ let deckMap = new deck.DeckGL({
     latitude: 52.50131842240836,
     zoom: 15
   },
-  layers: [superMarketLayer,parkingLotLayer,peopleLayer],
+  layers: [superMarketLayer,parkingLotLayer,FastFoodLayer,peopleLayer],
   getTooltip,
   controller: true,
   onViewStateChange: ({ viewState }) => {
@@ -337,10 +390,12 @@ let deckMap = new deck.DeckGL({
     });
   },
   onWebGLInitialized: () => {
-    Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {
+    Promise.all([loadParkingLots(), loadSuperMarkets(),loadFastFood()]).then(() => {
       calculateDistanceMatrixForSuperMarketsAndParkingLots();
     })
+   
     loadPeople();
+
   },
   onDragEnd: calculateDistanceMatrixForSuperMarketsAndParkingLots
 });
@@ -404,7 +459,7 @@ const flyToPoint = currentIndex => {
         transitionInterpolator: new deck.FlyToInterpolator(),
         transitionDuration: '1000'
       },
-      layers: [iconLayer,superMarketLayer,parkingLotLayer,peopleLayer]
+      layers: [iconLayer,superMarketLayer,parkingLotLayer,FastFoodLayer,peopleLayer]
     });
   }
   else {
@@ -434,10 +489,12 @@ document.getElementById("locate-me").addEventListener("click", () => {
       }
     });
 
-    Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {
+    Promise.all([loadParkingLots(), loadSuperMarkets(), loadFastFood()]).then(() => {
       calculateDistanceMatrixForSuperMarketsAndParkingLots();
     });
+   
     loadPeople();
+   
 
   }, (error) => {
     console.log.error(error);

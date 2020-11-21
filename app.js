@@ -29,13 +29,17 @@ const getParkingSpaceInfo = evt => {
   //console.log(coord);
   let areaParkingSpot = factory.createPolygon(coord).getArea();
   if (parkingSpotInfos) {
-    let txt;
-    for (const element of Object.keys(parkingSpotInfos)) {
-      txt += element;
-    }
+    let txt ="";
+    // for (const element of Object.keys(parkingSpotInfos)) {
+    //   txt += element;
+    // }
+    Object.entries(parkingSpotInfos).forEach(([key,value]) => {
+      txt += `<li>${key}: ${value}</li>`
+    })
+    parkingText.innerHTML =  JSON.stringify(parkingSpotInfos, undefined, 2);
 
     let areaqm = areaParkingSpot * 1000000000;
-    parkingText.innerHTML = txt + areaqm;
+    parkingText.innerHTML = `<ul>${txt}</ul>`+ `Größe: ${areaqm} m²`;
   }
 }
 const parkingLotLayer = new deck.GeoJsonLayer({

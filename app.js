@@ -9,7 +9,7 @@ const backButton = document.getElementById("back-id");
 const forwardButton = document.getElementById("forward-id");
 const factory = new jsts.geom.GeometryFactory();
 
-<<<<<<< HEAD
+var aSortedDinstanceParkingLotSuperMarket;
 const COLOR_SCALE = [
   // negative
   [65, 182, 196],
@@ -28,9 +28,6 @@ const COLOR_SCALE = [
   [189, 0, 38],
   [128, 0, 38]
 ];
-=======
-var aSortedDinstanceParkingLotSuperMarket;
->>>>>>> d2e099df63438f2cc33a0a57602be679047ce37b
 
 const INITIAL_VIEW_STATE = {
   longitude: 13.302428631992042,
@@ -205,7 +202,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
   }).then(res => res.json()).then(oResult => {
 
    // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
-    oFeatureCollection=oResult;
+    let oFeatureCollection=oResult;
     console.log("poly",oFeatureCollection);
 
     for (let oFeature of oFeatureCollection.features) {

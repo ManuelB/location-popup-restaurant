@@ -203,7 +203,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
 
    // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
     let oFeatureCollection=oResult;
-    console.log(oResult);
+
 
     for (let oFeature of oFeatureCollection.features) {
       if (oFeature.geometry.type == "Point") {

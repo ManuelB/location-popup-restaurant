@@ -43,10 +43,10 @@ html, body, #container, #map {
 
   .btn {
     position: relative;
-  
+    font-size: 2em;
     display: block;
     margin: 30px auto;
-    padding: 0;
+    padding: 10;
   
     overflow: hidden;
   

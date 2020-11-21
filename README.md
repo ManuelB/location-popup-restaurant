@@ -9,9 +9,11 @@ This project uses the following data sources and technologies to find a good pla
  * [Tensoflow JS for an SGD Optimizer](https://js.tensorflow.org/api/latest/#train.sgd)
  * [Deck.gl for 3D visualization](https://deck.gl/)
 
-[Demo](https://manuelb.github.io/location-popup-restaurant/)
+## Demo
 
-# Screenshots
+The project can be started directly on github, just click on [Demo](https://manuelb.github.io/location-popup-restaurant/)
+
+## Screenshots
 
  * ![Screenshot 1 ](screenshots/screenshot-1.png)
  * ![Screenshot 2 ](screenshots/screenshot-2.png)

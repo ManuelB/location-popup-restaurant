@@ -114,7 +114,6 @@ function loadSuperMarkets() {
 }
 
 function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
-  let viewState = deckMap._getViewState();
   showLoader();
   fetch("https://lz4.overpass-api.de/api/interpreter", {
       "body": oQuery,
@@ -156,7 +155,7 @@ function optimizeLocation(start, rTree) {
     // use cumulative normal distribution function for judging distance
     // - very close -> very good
     // - far away -> we don't care
-    const scoreOfCurrentCoordinates = function () {
+    const scoreOfCurrentCoordinates =  _ => {
         let pointCoordinates = [scorePoint.dataSync()[0], scorePoint.dataSync()[1]];
         let closestFeature = knn(rTree, pointCoordinates[0],  pointCoordinates[1], 1);
         if(closestFeature) {
@@ -181,7 +180,7 @@ function optimizeLocation(start, rTree) {
 }
 
 // Create Deck.GL map
-deckMap = new deck.DeckGL({
+let deckMap = new deck.DeckGL({
   mapStyle: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json',
   initialViewState: {
     longitude: 13.302428631992042,
@@ -205,7 +204,7 @@ deckMap = new deck.DeckGL({
   onDragEnd: () => {
     let start = [map.getCenter().lng, map.getCenter().lat];
     let optimizedLocation = optimizeLocation(start, superMarketRTree);
-    
+    document.getElementById("SECTIONID").innerText= `Current optimized location ${optimizedLocation[0]}:${optimizedLocation[1]} `;
     let optimizedLocationLayer = new deck.IconLayer({
       id: 'optimized-location-layer',
       pickable: true,
@@ -224,7 +223,6 @@ deckMap = new deck.DeckGL({
     deckMap.setProps({
       layers: [parkingLotLayer, superMarketLayer, optimizedLocationLayer]
     });
-   // optimizedLocationLayer.draw();
     //loadParkingLots();
     //loadSuperMarkets();
   },
@@ -232,3 +230,5 @@ deckMap = new deck.DeckGL({
       alert("Redrawing is done");
   }*/
 });
+
+deckMap.on

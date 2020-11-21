@@ -237,6 +237,7 @@ let deckMap = new deck.DeckGL({
   layers: [parkingLotLayer, superMarketLayer],
   controller: true,
   onViewStateChange: ({ viewState }) => {
+    deckMap.setProps({viewState})
     map.jumpTo({
       center: [viewState.longitude, viewState.latitude],
       zoom: viewState.zoom,
@@ -296,16 +297,22 @@ forwardButton.addEventListener("click", _ => {
 const flyToPoint = currentIndex => {
   let currentPoint2 = intermediateOptimizationPoints[currentIndex];
  if (currentPoint2) {
+   console.log(`${currentPoint2[0]} : ${currentPoint2[1]}`);
    deckMap.setProps({
      viewState: {
        longitude: currentPoint2[0],
        latitude: currentPoint2[1],
-       zoom: 20,
-       pitch: 0,
-       bearing: 0,
+       "zoom": 16,
+       "minZoom": 5,
+       "maxZoom": 20,
+       "pitch": 40.5,
+       "bearing": -27.396674584323023,
        transitionInterpolator: new deck.FlyToInterpolator(),
-       transitionDuration: 'auto'
+       transitionDuration: '200'
      }
    });
+ }
+ else {
+   console.log("nothing to show");
  }
 }

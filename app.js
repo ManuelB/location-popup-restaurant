@@ -92,10 +92,9 @@ const peopleLayer = new deck.PolygonLayer({
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
   getPolygon: d => d.geometry.coordinates,
-  getElevation: d => d.einwohner / d.qkm / 10,
-  getFillColor: d => [d.einwohner / d.qkm / 60, 140, 0],
-  getFillColor: [180, 130, 30, 200],
-  getLineColor: _ => [160, 160, 180, 200],
+  getElevation: d => d.properties.einwohner / d.properties.qkm / 10,
+  getFillColor: d => [d.properties.einwohner / d.properties.qkm / 60, 140, 0],
+  getLineColor: _ => [160, 160, 180],
   getRadius: 5,
   getLineWidth: 1,
   getElevation: 20
@@ -172,11 +171,11 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
     //"body": oQuery,
     "method": "POST"
   }).then(res => res.json()).then(oResult => {
-    console.log("xsfsdf",oResult);
+
    // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
     oFeatureCollection=oResult;
-    console.log("f",oFeatureCollection);
-    //https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/PLZ_Gebiete/FeatureServer/0/query?outFields=*&where=1%3D1
+    console.log("poly",oFeatureCollection);
+
     for (let oFeature of oFeatureCollection.features) {
       if (oFeature.geometry.type == "Point") {
         oRIndex.insert({
@@ -188,7 +187,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
         });
       }
     }
-
+    
     oLayer.updateState(
       {
         props: {
@@ -197,7 +196,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
         changeFlags: { dataChanged: true }
       }
     );
-
+    
     hideLoader();
   }).catch(e => {
     console.error(e);
@@ -214,7 +213,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
     "method": "POST"
   }).then(res => res.json()).then(oResult => {
     let oFeatureCollection = osmtogeojson(oResult);
-    console.log("1",oFeatureCollection);
+ 
 
     for (let oFeature of oFeatureCollection.features) {
       if (oFeature.geometry.type == "Point") {
@@ -247,6 +246,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
         changeFlags: { dataChanged: true }
       }
     );
+  
     hideLoader();
   }).catch(e => {
     console.error(e);

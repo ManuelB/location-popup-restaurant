@@ -138,19 +138,8 @@ function getTooltip({ object }) {
 
 
 const ICON_MAPPING = {
-  marker: {
-    x: 0,
-    y: 0,
-    width: 128,
-    height: 128,
-    mask: true,
-    anchorX: -64,
-    anchorY: -64
-  }
+  marker: {x: 0, y: 0, width: 128, height: 128, mask: true}
 };
-const getMapIcon = () => {
-  return 'marker';
-}
 
 const getCoordinates = d => {
   return d.coordinates;
@@ -301,7 +290,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
 let aUniqueSortedDistanceParkingLotSuperMarket = [];
 const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
   let start = [map.getCenter().lng, map.getCenter().lat];
-  const amountOfNeigbhors = 10;
+  const amountOfNeigbhors = 25;
 
   let aSuperMarkets = knn(superMarketRTree, start[0], start[1], amountOfNeigbhors);
   let aParkingLots = knn(parkingLotRTree, start[0], start[1], amountOfNeigbhors);
@@ -325,8 +314,6 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
       mMapAlreadyIn[sSuperMarketId] = true;
       aUniqueSortedDistanceParkingLotSuperMarket.push(oItems);
     }
-
-
   }
 
 
@@ -393,6 +380,22 @@ const flyToPoint = currentIndex => {
     console.log(error);
   }
   if (currentPoint2) {
+
+    let iconLayer = new deck.IconLayer({
+      id: 'icon-layer',
+      data:[currentPoint2],
+      pickable: true,
+      // iconAtlas and iconMapping are required
+      // getIcon: return a string
+      iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
+      iconMapping: ICON_MAPPING,
+      getIcon: d => 'marker',
+      sizeScale: 15,
+      getPosition: d => d,
+      getSize: d => 5,
+      getColor: d => [Math.sqrt(d.exits), 140, 0]
+    });
+
     deckMap.setProps({
       viewState: {
         longitude: currentPoint2[0],
@@ -404,7 +407,8 @@ const flyToPoint = currentIndex => {
         "bearing": -27.396674584323023,
         transitionInterpolator: new deck.FlyToInterpolator(),
         transitionDuration: '1000'
-      }
+      },
+      layers: [iconLayer, peopleLayer,superMarketLayer,parkingLotLayer]
     });
   }
   else {

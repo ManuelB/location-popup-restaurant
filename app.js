@@ -109,11 +109,13 @@ const peopleLayer = new deck.GeoJsonLayer({
   extruded: true,
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
-  getElevation: d => Math.sqrt(d.properties.qkm/d.properties.einwohner) * 10,
-  getFillColor: d => colorScale(d.properties.qkm/d.properties.einwohner),
+  opacity:0.05,
+  getElevation: d => Math.sqrt(d.properties.einwohner) * 0.01,
+  getFillColor: d => colorScale(d.properties.qkm),
   getLineColor: [255, 255, 255],
   getRadius: 5,
-  getLineWidth: 1
+  getLineWidth: 1, 
+  getTooltip
 });
 
 function colorScale(x) {
@@ -123,6 +125,14 @@ function colorScale(x) {
   }
   return COLOR_SCALE[i] || COLOR_SCALE[COLOR_SCALE.length - 1];
 }
+
+function getTooltip({object}) {
+  return object && `Average Property Value
+    ${object.properties.qkm}
+    Growth
+    ${Math.round(object.properties.einwohner * 10)}`;
+}
+
 
 const ICON_MAPPING = {
   marker: {

@@ -9,6 +9,7 @@ const backButton = document.getElementById("back-id");
 const forwardButton = document.getElementById("forward-id");
 const factory = new jsts.geom.GeometryFactory();
 
+<<<<<<< HEAD
 const COLOR_SCALE = [
   // negative
   [65, 182, 196],
@@ -27,6 +28,9 @@ const COLOR_SCALE = [
   [189, 0, 38],
   [128, 0, 38]
 ];
+=======
+var aSortedDinstanceParkingLotSuperMarket;
+>>>>>>> d2e099df63438f2cc33a0a57602be679047ce37b
 
 const INITIAL_VIEW_STATE = {
   longitude: 13.302428631992042,
@@ -174,7 +178,7 @@ function loadParkingLots() {
   out+body;
   >;
   out+skel+qt;`
-  loadLayerWithOverpass(parkingLotLayer, encodeURI(query), parkingLotRTree);
+  return loadLayerWithOverpass(parkingLotLayer, encodeURI(query), parkingLotRTree);
 }
 function loadSuperMarkets() {
   let query = `data=[out:json][timeout:50];
@@ -184,7 +188,7 @@ function loadSuperMarkets() {
   out+body;
   >;
   out+skel+qt;`
-  loadLayerWithOverpass(superMarketLayer, encodeURI(query), superMarketRTree);
+  return loadLayerWithOverpass(superMarketLayer, encodeURI(query), superMarketRTree);
 }
 
 function loadPeople() {
@@ -236,7 +240,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
 
 function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
   showLoader();
-  fetch("https://lz4.overpass-api.de/api/interpreter", {
+  return fetch("https://lz4.overpass-api.de/api/interpreter", {
     "body": oQuery,
     "method": "POST"
   }).then(res => res.json()).then(oResult => {
@@ -343,6 +347,28 @@ function optimizeLocation(start, rTrees) {
 
 }
 
+const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
+  let start = [map.getCenter().lng, map.getCenter().lat];
+  const amountOfNeigbhors = 10;
+  
+  let aSuperMarkets = knn(superMarketRTree, start[0], start[1], amountOfNeigbhors);
+  let aParkingLots = knn(parkingLotRTree, start[0], start[1], amountOfNeigbhors);
+
+  const aDistanceParkingLotSuperMarket = [];
+
+  for(let oSuperMarket of aSuperMarkets) {
+    for(let oParkingLot of aParkingLots) {
+      const input1 =  factory.createPoint(new jsts.geom.Coordinate (oSuperMarket.feature.geometry.coordinates[0], oSuperMarket.feature.geometry.coordinates[1]));
+      const input2 =  factory.createPoint(new jsts.geom.Coordinate (oParkingLot.feature.geometry.coordinates[0], oParkingLot.feature.geometry.coordinates[1]));
+      const distance = new jsts.operation.distance.DistanceOp( input1, input2).distance();
+      aDistanceParkingLotSuperMarket.push({"distance": distance, "superMarket":oSuperMarket, "oParkingLot":oParkingLot})
+    }
+  }
+  aSortedDinstanceParkingLotSuperMarket = aDistanceParkingLotSuperMarket.sort((a,b) => a.distance-b.distance);
+  return aSortedDinstanceParkingLotSuperMarket;
+};
+
+// Currently not used anymore
 const optimize = () => {
   let start = [map.getCenter().lng, map.getCenter().lat];
   let optimizedLocation = optimizeLocation(start, [superMarketRTree, parkingLotRTree]);
@@ -369,8 +395,6 @@ const optimize = () => {
   deckMap.setProps({
     layers: aLayers
   });
-  //loadParkingLots();
-  //loadSuperMarkets();
 }
 
 // Create Deck.GL map
@@ -393,11 +417,12 @@ let deckMap = new deck.DeckGL({
     });
   },
   onWebGLInitialized: () => {
-    loadParkingLots();
-    loadSuperMarkets();
+    Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {
+      calculateDistanceMatrixForSuperMarketsAndParkingLots();
+    })
     loadPeople();
   },
-  onDragEnd: optimize,
+  onDragEnd: calculateDistanceMatrixForSuperMarketsAndParkingLots,
 
   /*shouldUpdateState: (props, oldProps, context, changeFlags) =>{
       alert("Redrawing is done");
@@ -418,12 +443,12 @@ forwardButton.addEventListener("click", _ => {
 
 const flyToPoint = currentIndex => {
   let currentPoint2;
-  let feature = superMarketLayer.state.features.polygonFeatures;
+  let feature = aSortedDinstanceParkingLotSuperMarket;
   if (currentIndex > feature.length || currentIndex < 0) {
     currentIndex=currentPoint=0;
   }
   try {
-    let featurePoint = superMarketLayer.state.features.pointFeatures[currentIndex];
+    let featurePoint = aSortedDinstanceParkingLotSuperMarket[currentIndex].superMarket.feature;
     currentPoint2 = featurePoint.geometry.coordinates;
     getParkingSpaceInfo(feature[currentIndex].__source);
   } catch (error) {

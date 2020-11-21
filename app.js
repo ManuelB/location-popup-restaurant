@@ -230,7 +230,8 @@ function optimizeLocation(start, rTrees) {
       sizeScale: 15,
       getPosition: (d) => d,
       getSize: _ => 2,
-      getColor: _ => [0, 0, 0],
+      getColor: _ => [188, 188, 215],
+      opacity: 0.5 ,
       data: intermediateOptimizationPoints
     });
   }
@@ -256,7 +257,7 @@ const optimize = () => {
     sizeScale: 15,
     getPosition: getCoordinates,
     getSize: _ => 5,
-    getColor: _ => [100, 140, 0],
+    getColor: _ => [90,90,90],
     data: [{ "coordinates": optimizedLocation.location }]
   });
 

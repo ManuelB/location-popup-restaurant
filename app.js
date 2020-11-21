@@ -111,8 +111,8 @@ const peopleLayer = new deck.GeoJsonLayer({
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
   opacity: 0.07,
-  getElevation: (d) => { return 0; /* return Math.sqrt(d.properties.einwohner  / d.properties.qkm) * 0.1;*/ },
-  getFillColor: (d) => { return colorScale((d.properties.einwohner / d.properties.qkm)/5000); },
+  getElevation: d => Math.sqrt(d.properties.einwohner / d.properties.qkm) * 0.1,
+  getFillColor: d => colorScale((d.properties.einwohner / d.properties.qkm) / 5000),
   getLineColor: [255, 255, 255],
   getRadius: 5,
   getLineWidth: 1,
@@ -189,18 +189,14 @@ function loadSuperMarkets() {
 }
 
 function loadPeople() {
-  let query = bottomLeft[0] + `%2C` + bottomLeft[1]  + `%2C` + topRight[0] + `%2C` + topRight[1];
-  //console.log(query);
-  loadLayerWithGis(peopleLayer, encodeURI(query), peopleRTree);
+  let Query = bottomLeft[0] + `%2C` + bottomLeft[1]  + `%2C` + topRight[0] + `%2C` + topRight[1];
+  let query = "https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/PLZ_Gebiete/FeatureServer/0/query?where=1%3D1&outFields=*&geometry="+Query+"&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson"
+  loadLayerWithGis(peopleLayer,query, peopleRTree);
 }
-
 
 function loadLayerWithGis(oLayer, oQuery, oRIndex) {
   showLoader();
-  let Query='13.3%2C52.5%2C13.35%2C52.55';
-  //console.log(Query);
-  fetch("https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/PLZ_Gebiete/FeatureServer/0/query?where=1%3D1&outFields=*&geometry="+Query+"&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson", {
-    //"body": oQuery,
+  fetch(oQuery, {
     "method": "POST"
   }).then(res => res.json()).then(oResult => {
 

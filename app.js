@@ -12,9 +12,6 @@ const sectionHtml = document.getElementById("section-id");
 const factory = new jsts.geom.GeometryFactory();
 var aSortedDistanceParkingLotSuperMarket;
 
-
-
-
 const COLOR_SCALE = [
   // negative
   [65, 182, 196],
@@ -355,11 +352,7 @@ let deckMap = new deck.DeckGL({
     })	
     loadPeople();	
   },	
-  onDragEnd: calculateDistanceMatrixForSuperMarketsAndParkingLots,	
-
-  /*shouldUpdateState: (props, oldProps, context, changeFlags) =>{	
-      alert("Redrawing is done");	
-  }*/	
+  onDragEnd: calculateDistanceMatrixForSuperMarketsAndParkingLots
 });
 
 
@@ -387,8 +380,7 @@ const flyToPoint = currentIndex => {
     backButton.disabled = false
   }
   try {
-    let featurePoint = aUniqueSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.feature;
-    currentPoint2 = featurePoint.geometry.coordinates;
+    currentPoint2 = aUniqueSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.point;
     getParkingSpaceInfo({"object": aUniqueSortedDistanceParkingLotSuperMarket[currentIndex].parkingLot.feature}, aSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.feature);
   } catch (error) {
     console.log(error);
@@ -412,3 +404,35 @@ const flyToPoint = currentIndex => {
     console.log("nothing to show");
   }
 }
+
+document.getElementById("locate-me").addEventListener("click",() => {
+  navigator.geolocation.getCurrentPosition((position) => {
+    const latitude  = position.coords.latitude;
+    const longitude = position.coords.longitude;
+
+    bottomLeft = [longitude-0.05, latitude-0.05];
+    topRight = [longitude+0.05, latitude+0.05];
+
+    deckMap.setProps({
+      viewState: {
+        longitude: longitude,
+        latitude: latitude,
+        "zoom": 16,
+        "minZoom": 5,
+        "maxZoom": 20,
+        "pitch": 40.5,
+        "bearing": -27.396674584323023,
+        transitionInterpolator: new deck.FlyToInterpolator(),
+        transitionDuration: '1000'
+      }
+    });
+
+    Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {	
+      calculateDistanceMatrixForSuperMarketsAndParkingLots();	
+    });
+    loadPeople();
+    
+  }, (error) => {
+    console.log.error(error);
+  });
+});

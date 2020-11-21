@@ -10,6 +10,9 @@ const forwardButton = document.getElementById("forward-id");
 const loader = document.getElementById("loader");
 const sectionHtml = document.getElementById("section-id");
 const factory = new jsts.geom.GeometryFactory();
+const revenue = document.getElementById("revenue-potential");
+const dailySales = document.getElementById("daily-sales");
+const supermarketName = document.getElementById("supermarket-name");
 var aSortedDistanceParkingLotSuperMarket;
 
 const COLOR_SCALE = [
@@ -45,17 +48,28 @@ const map = new mapboxgl.Map({
   center: [INITIAL_VIEW_STATE.longitude, INITIAL_VIEW_STATE.latitude],
   zoom: INITIAL_VIEW_STATE.zoom
 });
-const listInfo = ["name", "opening_hours", "website", "addr:street"];
-const getParkingSpaceInfo = (evt, oSuperMarketFeature) => {
-  let parkingSpotInfos = evt.object.properties;
-  let coord = evt.object.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
-  let areaParkingSpot = factory.createPolygon(coord).getArea();
-  
-  document.getElementById("revenue-potential").innerHTML = (Math.random()*1000).toFixed()+" €";
-  document.getElementById("daily-sales").innerHTML = (Math.random()*200).toFixed();
-  document.getElementById("supermarket-name").innerHTML = oSuperMarketFeature.properties.name;
+
+
+
+const getParkingSpaceInfo = (evt, oFeature) => {
+  let areaParkingSpot = 0;
+  if (evt) {
+    let coord = evt.object.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
+    areaParkingSpot = factory.createPolygon(coord).getArea();
+    revenue.innerHTML = (Math.random() * 1000).toFixed() + " €";
+    dailySales.innerHTML = (Math.random() * 200).toFixed();
+    supermarketName.innerHTML = oFeature.properties ? oFeature.properties.name : "";
+  }
+  else {
+    revenue.innerHTML = "";
+    dailySales.innerHTML = "";
+    supermarketName.innerHTML = "Parkplatz";
+    let coord = oFeature.object.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
+    areaParkingSpot = factory.createPolygon(coord).getArea();
+  }
+
   let areaqm = areaParkingSpot * 1000000000;
-  document.getElementById("parkinglot-area").innerHTML = `${areaqm.toFixed()} m²`; 
+  document.getElementById("parkinglot-area").innerHTML = `${areaqm.toFixed()} m²`;
 }
 const parkingLotLayer = new deck.GeoJsonLayer({
   id: 'parking-lot-layer',
@@ -70,7 +84,7 @@ const parkingLotLayer = new deck.GeoJsonLayer({
   getRadius: 5,
   getLineWidth: 1,
   getElevation: 2,
-  onClick: evt => getParkingSpaceInfo(evt)
+  onClick: evt => getParkingSpaceInfo(null, evt)
 });
 
 const superMarketLayer = new deck.GeoJsonLayer({
@@ -96,30 +110,30 @@ const peopleLayer = new deck.GeoJsonLayer({
   extruded: true,
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
-  opacity:0.07,
-  getElevation: d => Math.sqrt(d.properties.einwohner  / d.properties.qkm) * 0.1,
-  getFillColor: d => colorScale((d.properties.einwohner / d.properties.qkm)/5000),
+  opacity: 0.07,
+  getElevation: d => Math.sqrt(d.properties.einwohner / d.properties.qkm) * 0.1,
+  getFillColor: d => colorScale((d.properties.einwohner / d.properties.qkm) / 5000),
   getLineColor: [255, 255, 255],
   getRadius: 5,
-  getLineWidth: 1, 
+  getLineWidth: 1,
 
 });
 
 function colorScale(x) {
-
-  const i = Math.round(x * 1) + 1;
+  const i = Math.round(x * 1) + 4;
   if (x < 0) {
     return COLOR_SCALE[i] || COLOR_SCALE[0];
   }
   return COLOR_SCALE[i] || COLOR_SCALE[COLOR_SCALE.length - 1];
 }
-  
 
-function getTooltip({object}) {
+
+
+function getTooltip({ object }) {
   return object && `
     Bezirk ${(object.properties.note)}
     Population/qkm
-    ${Math.round(object.properties.einwohner / object.properties.qkm )}`;
+    ${Math.round(object.properties.einwohner / object.properties.qkm)}`;
 }
 
 
@@ -160,7 +174,7 @@ function hideLoader() {
   if (displayLoaderCounter <= 0) {
     loader.style.display = "none";
     sectionHtml.style.display = "inline";
-    
+
   }
 }
 
@@ -198,13 +212,13 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
     "method": "POST"
   }).then(res => res.json()).then(oResult => {
 
-   // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
-    let oFeatureCollection=oResult;
+    // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
+    let oFeatureCollection = oResult;
 
 
     for (let oFeature of oFeatureCollection.features) {
       if (oFeature.geometry.type == "Point") {
-  
+
         oRIndex.insert({
           "minX": oFeature.geometry.coordinates[0],
           "minY": oFeature.geometry.coordinates[1],
@@ -215,7 +229,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
         });
       }
     }
-    
+
     oLayer.updateState(
       {
         props: {
@@ -224,22 +238,12 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
         changeFlags: { dataChanged: true }
       }
     );
-    
+
     hideLoader();
   }).catch(e => {
     console.error(e);
   });
 }
-
-function colorScale(x) {
-  const i = Math.round(x * 1) + 4;
-  if (x < 0) {
-    return COLOR_SCALE[i] || COLOR_SCALE[0];
-  }
-  return COLOR_SCALE[i] || COLOR_SCALE[COLOR_SCALE.length - 1];
-}
-
-
 
 function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
   showLoader();
@@ -248,7 +252,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
     "method": "POST"
   }).then(res => res.json()).then(oResult => {
     let oFeatureCollection = osmtogeojson(oResult);
- 
+
 
     for (let oFeature of oFeatureCollection.features) {
       if (oFeature.geometry.type == "Point") {
@@ -260,7 +264,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
           "point": oFeature.geometry.coordinates,
           "feature": oFeature
         });
-      } else if(oFeature.geometry.type == "Polygon") {
+      } else if (oFeature.geometry.type == "Polygon") {
         let coord = oFeature.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
         let oPolygon = factory.createPolygon(coord);
         let oCenter = oPolygon.getCentroid().getCoordinate();
@@ -283,7 +287,7 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
         changeFlags: { dataChanged: true }
       }
     );
-  
+
     hideLoader();
   }).catch(e => {
     console.error(e);
@@ -291,30 +295,30 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
 }
 
 
+let aUniqueSortedDistanceParkingLotSuperMarket = [];
 const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
   let start = [map.getCenter().lng, map.getCenter().lat];
   const amountOfNeigbhors = 10;
-  
+
   let aSuperMarkets = knn(superMarketRTree, start[0], start[1], amountOfNeigbhors);
   let aParkingLots = knn(parkingLotRTree, start[0], start[1], amountOfNeigbhors);
 
   const aDistanceParkingLotSuperMarket = [];
 
-  for(let oSuperMarket of aSuperMarkets) {
-    for(let oParkingLot of aParkingLots) {
-      const input1 =  factory.createPoint(new jsts.geom.Coordinate (oSuperMarket.point[0], oSuperMarket.point[1]));
-      const input2 =  factory.createPoint(new jsts.geom.Coordinate (oParkingLot.point[0], oParkingLot.point[1]));
-      const distance = new jsts.operation.distance.DistanceOp( input1, input2).distance();
-      aDistanceParkingLotSuperMarket.push({"distance": distance, "superMarket":oSuperMarket, "parkingLot":oParkingLot})
+  for (let oSuperMarket of aSuperMarkets) {
+    for (let oParkingLot of aParkingLots) {
+      const input1 = factory.createPoint(new jsts.geom.Coordinate(oSuperMarket.point[0], oSuperMarket.point[1]));
+      const input2 = factory.createPoint(new jsts.geom.Coordinate(oParkingLot.point[0], oParkingLot.point[1]));
+      const distance = new jsts.operation.distance.DistanceOp(input1, input2).distance();
+      aDistanceParkingLotSuperMarket.push({ "distance": distance, "superMarket": oSuperMarket, "parkingLot": oParkingLot })
     }
   }
-  aSortedDistanceParkingLotSuperMarket = aDistanceParkingLotSuperMarket.sort((a,b) => a.distance-b.distance);
-  
+  aSortedDistanceParkingLotSuperMarket = aDistanceParkingLotSuperMarket.sort((a, b) => a.distance - b.distance);
+
   let mMapAlreadyIn = {};
-  aUniqueSortedDistanceParkingLotSuperMarket = [];
-  for(let oItems of aSortedDistanceParkingLotSuperMarket) {
+  for (let oItems of aSortedDistanceParkingLotSuperMarket) {
     let sSuperMarketId = oItems.superMarket.feature.id;
-    if(!(sSuperMarketId in mMapAlreadyIn)) {
+    if (!(sSuperMarketId in mMapAlreadyIn)) {
       mMapAlreadyIn[sSuperMarketId] = true;
       aUniqueSortedDistanceParkingLotSuperMarket.push(oItems);
     }
@@ -327,31 +331,31 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
 };
 
 // Create Deck.GL map	
-let deckMap = new deck.DeckGL({	
-  mapStyle: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json',	
-  initialViewState: {	
-    longitude: 13.302428631992042,	
-    latitude: 52.50131842240836,	
-    zoom: 15	
-  },	
-  layers: [parkingLotLayer, superMarketLayer, peopleLayer],	
-  getTooltip,	
-  controller: true,	
-  onViewStateChange: ({ viewState }) => {	
-    deckMap.setProps({ viewState })	
-    map.jumpTo({	
-      center: [viewState.longitude, viewState.latitude],	
-      zoom: viewState.zoom,	
-      bearing: viewState.bearing,	
-      pitch: viewState.pitch	
-    });	
-  },	
-  onWebGLInitialized: () => {	
-    Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {	
-      calculateDistanceMatrixForSuperMarketsAndParkingLots();	
-    })	
-    loadPeople();	
-  },	
+let deckMap = new deck.DeckGL({
+  mapStyle: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json',
+  initialViewState: {
+    longitude: 13.302428631992042,
+    latitude: 52.50131842240836,
+    zoom: 15
+  },
+  layers: [peopleLayer,superMarketLayer,parkingLotLayer],
+  getTooltip,
+  controller: true,
+  onViewStateChange: ({ viewState }) => {
+    deckMap.setProps({ viewState })
+    map.jumpTo({
+      center: [viewState.longitude, viewState.latitude],
+      zoom: viewState.zoom,
+      bearing: viewState.bearing,
+      pitch: viewState.pitch
+    });
+  },
+  onWebGLInitialized: () => {
+    Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {
+      calculateDistanceMatrixForSuperMarketsAndParkingLots();
+    })
+    loadPeople();
+  },
   onDragEnd: calculateDistanceMatrixForSuperMarketsAndParkingLots
 });
 
@@ -369,19 +373,19 @@ forwardButton.addEventListener("click", _ => {
 
 const flyToPoint = currentIndex => {
   let currentPoint2;
-  if(!aUniqueSortedDistanceParkingLotSuperMarket) {
+  if (!aUniqueSortedDistanceParkingLotSuperMarket) {
     return;
   }
   let feature = aUniqueSortedDistanceParkingLotSuperMarket;
   if (currentIndex > feature.length || currentIndex < 0) {
     backButton.disabled = true
-    currentIndex=currentPoint=0;
+    currentIndex = currentPoint = 0;
   } else {
     backButton.disabled = false
   }
   try {
     currentPoint2 = aUniqueSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.point;
-    getParkingSpaceInfo({"object": aUniqueSortedDistanceParkingLotSuperMarket[currentIndex].parkingLot.feature}, aSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.feature);
+    getParkingSpaceInfo({ "object": aUniqueSortedDistanceParkingLotSuperMarket[currentIndex].parkingLot.feature }, aSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.feature);
   } catch (error) {
     console.log(error);
   }
@@ -405,13 +409,13 @@ const flyToPoint = currentIndex => {
   }
 }
 
-document.getElementById("locate-me").addEventListener("click",() => {
+document.getElementById("locate-me").addEventListener("click", () => {
   navigator.geolocation.getCurrentPosition((position) => {
-    const latitude  = position.coords.latitude;
+    const latitude = position.coords.latitude;
     const longitude = position.coords.longitude;
 
-    bottomLeft = [longitude-0.05, latitude-0.05];
-    topRight = [longitude+0.05, latitude+0.05];
+    bottomLeft = [longitude - 0.05, latitude - 0.05];
+    topRight = [longitude + 0.05, latitude + 0.05];
 
     deckMap.setProps({
       viewState: {
@@ -427,11 +431,11 @@ document.getElementById("locate-me").addEventListener("click",() => {
       }
     });
 
-    Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {	
-      calculateDistanceMatrixForSuperMarketsAndParkingLots();	
+    Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {
+      calculateDistanceMatrixForSuperMarketsAndParkingLots();
     });
     loadPeople();
-    
+
   }, (error) => {
     console.log.error(error);
   });

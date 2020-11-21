@@ -211,7 +211,9 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
     "method": "POST"
   }).then(res => res.json()).then(oResult => {
 
+    // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
     let oFeatureCollection = oResult;
+
 
     for (let oFeature of oFeatureCollection.features) {
       if (oFeature.geometry.type == "Point") {

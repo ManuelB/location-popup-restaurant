@@ -111,7 +111,7 @@ const peopleLayer = new deck.GeoJsonLayer({
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
   opacity: 0.07,
-  getElevation: (d) => { return Math.sqrt(d.properties.einwohner  / d.properties.qkm) * 0.01; },
+  getElevation: (d) => { return 0; /* return Math.sqrt(d.properties.einwohner  / d.properties.qkm) * 0.1;*/ },
   getFillColor: (d) => { return colorScale((d.properties.einwohner / d.properties.qkm)/5000); },
   getLineColor: [255, 255, 255],
   getRadius: 5,

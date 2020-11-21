@@ -125,7 +125,8 @@ const peopleLayer = new deck.GeoJsonLayer({
 });
 
 function colorScale(x) {
-  const i = Math.round(x / 5000) + 1;
+  const i = Math.round(x / 10000) + 1;
+
   if (x < 0) {
     return COLOR_SCALE[i] || COLOR_SCALE[0];
   }
@@ -213,7 +214,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
 
    // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
     let oFeatureCollection=oResult;
-    console.log("poly",oFeatureCollection);
+    
 
     for (let oFeature of oFeatureCollection.features) {
       if (oFeature.geometry.type == "Point") {
@@ -244,7 +245,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
 }
 
 function colorScale(x) {
-  const i = Math.round(x * 7) + 4;
+  const i = Math.round(x * 10000) + 4;
   if (x < 0) {
     return COLOR_SCALE[i] || COLOR_SCALE[0];
   }

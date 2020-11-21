@@ -50,6 +50,7 @@ html, body, #container, #map {
   font-size: 2em;
   line-height: 1.6;
   min-height: 5rem;
+  padding: 0.5rem;
 }
 
 .btn {
@@ -173,8 +174,8 @@ SVG Icons - svgicons.sparkk.fr
 ----- */
 
 .svg-icon {
-  width: 1em;
-  height: 1em;
+  width: 4rem;
+  height: 4rem;
 }
 
 .svg-icon path,

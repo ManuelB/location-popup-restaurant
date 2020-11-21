@@ -12,7 +12,7 @@ html, body, #container, #map {
     top: 24px;
     right: 24px;
     min-width: 250px;
-    max-width: 250px;
+    max-width: 300px;
     z-index: 2;
     overflow-wrap: break-word;
   }
@@ -37,7 +37,7 @@ html, body, #container, #map {
   }
 
   .current-location {
-    font-size: 1.4em;
+    font-size: 2em;
     line-height: 1.6;
   }
 

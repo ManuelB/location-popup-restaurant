@@ -340,9 +340,9 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
 
   for (let oParkingLot of aParkingLots) {
     for (let oFastFoodLot of aFastFoodLots) {
-    const input2 = factory.createPoint(new jsts.geom.Coordinate(oParkingLot.point[0], oParkingLot.point[1]));
-    const input3 = factory.createPoint(new jsts.geom.Coordinate(oFastFoodLot.point[0], oFastFoodLot.point[1]));
-    const distance2 = new jsts.operation.distance.DistanceOp(input2, input3).distance();
+    const input3 = factory.createPoint(new jsts.geom.Coordinate(oParkingLot.point[0], oParkingLot.point[1]));
+    const input4 = factory.createPoint(new jsts.geom.Coordinate(oFastFoodLot.point[0], oFastFoodLot.point[1]));
+    const distance2 = new jsts.operation.distance.DistanceOp(input3, input4).distance();
    // console.log(distance);
     aDistanceParkingLotFastFood.push({ "id": i++ , "distance": distance2, "parkingLot": oParkingLot, "FastFood": oFastFoodLot})
   }

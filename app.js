@@ -8,6 +8,8 @@ const backButton = document.getElementById("back-id");
 const forwardButton = document.getElementById("forward-id");
 const factory = new jsts.geom.GeometryFactory();
 
+var aSortedDinstanceParkingLotSuperMarket;
+
 const INITIAL_VIEW_STATE = {
   longitude: 13.302428631992042,
   latitude: 52.50131842240836,
@@ -260,8 +262,7 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
       aDistanceParkingLotSuperMarket.push({"distance": distance, "superMarket":oSuperMarket, "oParkingLot":oParkingLot})
     }
   }
-  const aSortedDinstanceParkingLotSuperMarket = aDistanceParkingLotSuperMarket.sort((a,b) => a.distance-b.distance);
-  console.log(aSortedDinstanceParkingLotSuperMarket);
+  aSortedDinstanceParkingLotSuperMarket = aDistanceParkingLotSuperMarket.sort((a,b) => a.distance-b.distance);
   return aSortedDinstanceParkingLotSuperMarket;
 };
 
@@ -339,12 +340,12 @@ forwardButton.addEventListener("click", _ => {
 
 const flyToPoint = currentIndex => {
   let currentPoint2;
-  let feature = superMarketLayer.state.features.polygonFeatures;
+  let feature = aSortedDinstanceParkingLotSuperMarket;
   if (currentIndex > feature.length || currentIndex < 0) {
     currentIndex=currentPoint=0;
   }
   try {
-    let featurePoint = superMarketLayer.state.features.pointFeatures[currentIndex];
+    let featurePoint = aSortedDinstanceParkingLotSuperMarket[currentIndex].superMarket.feature;
     currentPoint2 = featurePoint.geometry.coordinates;
     getParkingSpaceInfo(feature[currentIndex].__source);
   } catch (error) {

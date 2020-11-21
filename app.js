@@ -13,8 +13,16 @@ const factory = new jsts.geom.GeometryFactory();
 var aSortedDistanceParkingLotSuperMarket;
 
 
+
+
 const COLOR_SCALE = [
-  
+  // negative
+  [65, 182, 196],
+  [127, 205, 187],
+  [199, 233, 180],
+  [237, 248, 177],
+
+  // positive
   [255, 255, 204],
   [255, 237, 160],
   [254, 217, 118],
@@ -23,8 +31,7 @@ const COLOR_SCALE = [
   [252, 78, 42],
   [227, 26, 28],
   [189, 0, 38],
-  [100, 0, 38],
-  [20, 0, 38]
+  [128, 0, 38]
 ];
 
 const INITIAL_VIEW_STATE = {
@@ -226,7 +233,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
 }
 
 function colorScale(x) {
-  const i = Math.round(x * 10000) + 4;
+  const i = Math.round(x * 1) + 4;
   if (x < 0) {
     return COLOR_SCALE[i] || COLOR_SCALE[0];
   }
@@ -307,6 +314,39 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
   return aSortedDistanceParkingLotSuperMarket;
 };
 
+// Create Deck.GL map	
+let deckMap = new deck.DeckGL({	
+  mapStyle: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json',	
+  initialViewState: {	
+    longitude: 13.302428631992042,	
+    latitude: 52.50131842240836,	
+    zoom: 15	
+  },	
+  layers: [parkingLotLayer, superMarketLayer, peopleLayer],	
+  getTooltip,	
+  controller: true,	
+  onViewStateChange: ({ viewState }) => {	
+    deckMap.setProps({ viewState })	
+    map.jumpTo({	
+      center: [viewState.longitude, viewState.latitude],	
+      zoom: viewState.zoom,	
+      bearing: viewState.bearing,	
+      pitch: viewState.pitch	
+    });	
+  },	
+  onWebGLInitialized: () => {	
+    Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {	
+      calculateDistanceMatrixForSuperMarketsAndParkingLots();	
+    })	
+    loadPeople();	
+  },	
+  onDragEnd: calculateDistanceMatrixForSuperMarketsAndParkingLots,	
+
+  /*shouldUpdateState: (props, oldProps, context, changeFlags) =>{	
+      alert("Redrawing is done");	
+  }*/	
+});
+
 
 let currentPoint = 0;
 backButton.addEventListener("click", _ => {
@@ -321,6 +361,9 @@ forwardButton.addEventListener("click", _ => {
 
 const flyToPoint = currentIndex => {
   let currentPoint2;
+  if(!aSortedDistanceParkingLotSuperMarket) {
+    return;
+  }
   let feature = aSortedDistanceParkingLotSuperMarket;
   if (currentIndex > feature.length || currentIndex < 0) {
     backButton.disabled = true

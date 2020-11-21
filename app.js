@@ -7,8 +7,8 @@ const sectionText = document.getElementById("SECTIONID");
 const parkingText = document.getElementById("INFOPARKING");
 const backButton = document.getElementById("back-id");
 const forwardButton = document.getElementById("forward-id");
+const loader = document.getElementById("loader");
 const factory = new jsts.geom.GeometryFactory();
-
 var aSortedDistanceParkingLotSuperMarket;
 
 
@@ -163,17 +163,18 @@ let topRight = [13.35, 52.55];
 
 let displayLoaderCounter = 0;
 
+
 function showLoader() {
   displayLoaderCounter++;
   if (displayLoaderCounter > 0) {
-    document.getElementById("loader").style.display = "initial";
+    loader.style.display = "initial";
   }
 }
 
 function hideLoader() {
   displayLoaderCounter--;
   if (displayLoaderCounter <= 0) {
-    document.getElementById("loader").style.display = "none";
+    loader.style.display = "none";
   }
 }
 

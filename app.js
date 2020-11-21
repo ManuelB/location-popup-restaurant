@@ -11,6 +11,26 @@ const factory = new jsts.geom.GeometryFactory();
 
 var aSortedDinstanceParkingLotSuperMarket;
 
+
+const COLOR_SCALE = [
+  // negative
+  [65, 182, 196],
+  [127, 205, 187],
+  [199, 233, 180],
+  [237, 248, 177],
+
+  // positive
+  [255, 255, 204],
+  [255, 237, 160],
+  [254, 217, 118],
+  [254, 178, 76],
+  [253, 141, 60],
+  [252, 78, 42],
+  [227, 26, 28],
+  [189, 0, 38],
+  [128, 0, 38]
+];
+
 const INITIAL_VIEW_STATE = {
   longitude: 13.302428631992042,
   latitude: 52.50131842240836,
@@ -86,7 +106,7 @@ const superMarketLayer = new deck.GeoJsonLayer({
   getElevation: 20
 });
 
-const peopleLayer = new deck.PolygonLayer({
+const peopleLayer = new deck.GeoJsonLayer({
   id: 'people-layer',
   pickable: true,
   stroked: false,
@@ -94,14 +114,30 @@ const peopleLayer = new deck.PolygonLayer({
   extruded: true,
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
-  getPolygon: d => d.geometry.coordinates,
-  getElevation: d => d.properties.einwohner / d.properties.qkm / 10,
-  getFillColor: d => [d.properties.einwohner / d.properties.qkm / 60, 140, 0],
-  getLineColor: _ => [160, 160, 180],
+  opacity:0.05,
+  getElevation: d => Math.sqrt(d.properties.einwohner) * 0.01,
+  getFillColor: d => colorScale(d.properties.qkm),
+  getLineColor: [255, 255, 255],
   getRadius: 5,
-  getLineWidth: 1,
-  getElevation: 20
+  getLineWidth: 1, 
+  getTooltip
 });
+
+function colorScale(x) {
+  const i = Math.round(x * 7) + 4;
+  if (x < 0) {
+    return COLOR_SCALE[i] || COLOR_SCALE[0];
+  }
+  return COLOR_SCALE[i] || COLOR_SCALE[COLOR_SCALE.length - 1];
+}
+
+function getTooltip({object}) {
+  return object && `Average Property Value
+    ${object.properties.qkm}
+    Growth
+    ${Math.round(object.properties.einwohner * 10)}`;
+}
+
 
 const ICON_MAPPING = {
   marker: {
@@ -176,7 +212,7 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
   }).then(res => res.json()).then(oResult => {
 
    // let oFeatureCollection = ArcgisToGeojsonUtils.arcgisToGeoJSON(oResult);
-    oFeatureCollection=oResult;
+    let oFeatureCollection=oResult;
     console.log("poly",oFeatureCollection);
 
     for (let oFeature of oFeatureCollection.features) {
@@ -207,6 +243,13 @@ function loadLayerWithGis(oLayer, oQuery, oRIndex) {
   });
 }
 
+function colorScale(x) {
+  const i = Math.round(x * 7) + 4;
+  if (x < 0) {
+    return COLOR_SCALE[i] || COLOR_SCALE[0];
+  }
+  return COLOR_SCALE[i] || COLOR_SCALE[COLOR_SCALE.length - 1];
+}
 
 
 

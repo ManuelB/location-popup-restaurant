@@ -9,6 +9,24 @@ const backButton = document.getElementById("back-id");
 const forwardButton = document.getElementById("forward-id");
 const factory = new jsts.geom.GeometryFactory();
 
+const COLOR_SCALE = [
+  // negative
+  [65, 182, 196],
+  [127, 205, 187],
+  [199, 233, 180],
+  [237, 248, 177],
+
+  // positive
+  [255, 255, 204],
+  [255, 237, 160],
+  [254, 217, 118],
+  [254, 178, 76],
+  [253, 141, 60],
+  [252, 78, 42],
+  [227, 26, 28],
+  [189, 0, 38],
+  [128, 0, 38]
+];
 
 const INITIAL_VIEW_STATE = {
   longitude: 13.302428631992042,
@@ -83,7 +101,7 @@ const superMarketLayer = new deck.GeoJsonLayer({
   getElevation: 20
 });
 
-const peopleLayer = new deck.PolygonLayer({
+const peopleLayer = new deck.GeoJsonLayer({
   id: 'people-layer',
   pickable: true,
   stroked: false,
@@ -91,14 +109,24 @@ const peopleLayer = new deck.PolygonLayer({
   extruded: true,
   lineWidthScale: 20,
   lineWidthMinPixels: 2,
-  getPolygon: d => d.geometry.coordinates,
-  getElevation: d => d.properties.einwohner / d.properties.qkm / 10,
-  getFillColor: d => [d.properties.einwohner / d.properties.qkm / 60, 140, 0],
-  getLineColor: _ => [160, 160, 180],
+  //getPolygon: d => d.geometry.coordinates,
+  //getElevation: d => d.properties.einwohner / d.properties.qkm / 10,
+  //getFillColor: d => [d.properties.einwohner / d.properties.qkm / 60, 140, 0],
+  //getLineColor: _ => [160, 160, 180],
+  getElevation: d => Math.sqrt(d.properties.qkm) * 10,
+  getFillColor: d => colorScale(d.properties.einwohner),
+  getLineColor: [255, 255, 255],
   getRadius: 5,
-  getLineWidth: 1,
-  getElevation: 20
+  getLineWidth: 1
 });
+
+function colorScale(x) {
+  const i = Math.round(x * 7) + 4;
+  if (x < 0) {
+    return COLOR_SCALE[i] || COLOR_SCALE[0];
+  }
+  return COLOR_SCALE[i] || COLOR_SCALE[COLOR_SCALE.length - 1];
+}
 
 const ICON_MAPPING = {
   marker: {

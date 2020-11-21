@@ -12,6 +12,7 @@ html, body, #container, #map {
   box-shadow: 0 0px 16px rgba(0, 0, 0, 0.24);
   top: 1vh;
   right: 1vw;
+  min-height: 47.5rem;
   min-width: 20rem;
   max-width: 30rem;
   z-index: 2;
@@ -157,13 +158,13 @@ h2 {
 }
 
 .lds-dual-ring {
-  display: inline-block;
+  display: inline-table;
   width: 80px;
   height: 80px;
 }
 .lds-dual-ring:after {
   content: " ";
-  display: block;
+  display: inline-table;
   width: 64px;
   height: 64px;
   margin: 8px;
@@ -172,6 +173,9 @@ h2 {
   border-color: #2ecc71 transparent #2ecc71  transparent;
   animation: lds-dual-ring 1.2s linear infinite;
 }
+.lds-dual-ring:before {
+margin-left: 2rem;
+}
 @keyframes lds-dual-ring {
   0% {
     transform: rotate(0deg);
@@ -179,4 +183,7 @@ h2 {
   100% {
     transform: rotate(360deg);
   }
+}
+.start-section {
+  display: none;
 }

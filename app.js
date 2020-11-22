@@ -55,7 +55,8 @@ const getParkingSpaceInfo = (evt, oFeature) => {
   let areaParkingSpot = 0;
   if (evt) {
     // if this is a polygon calculate the area
-    if("map" in evt.object.geometry.coordinates[0]) {
+    if(evt && evt.object && evt.object.geometry && evt.object.geometry.coordinates
+      && evt.object.geometry.coordinates.length > 0 && "map" in evt.object.geometry.coordinates[0]) {
       let coord = evt.object.geometry.coordinates[0].map(e => new jsts.geom.Coordinate(e[0], e[1]));
       areaParkingSpot = factory.createPolygon(coord).getArea();
     }

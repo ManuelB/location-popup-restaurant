@@ -157,7 +157,7 @@ let displayLoaderCounter = 0;
 function showLoader() {
   displayLoaderCounter++;
   if (displayLoaderCounter > 0) {
-    loader.style.display = "initial";
+    loader.style.display = "inline-block";
   }
 }
 

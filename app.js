@@ -294,11 +294,11 @@ const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
   const amountOfNeigbhors = 25;
 
   let aSuperMarkets = knn(superMarketRTree, start[0], start[1], amountOfNeigbhors);
-  let aParkingLots = knn(parkingLotRTree, start[0], start[1], amountOfNeigbhors);
-
+  
   const aDistanceParkingLotSuperMarket = [];
-
+  
   for (let oSuperMarket of aSuperMarkets) {
+    let aParkingLots = knn(parkingLotRTree, oSuperMarket.point[0], oSuperMarket.point[1], 1);
     for (let oParkingLot of aParkingLots) {
       const input1 = factory.createPoint(new jsts.geom.Coordinate(oSuperMarket.point[0], oSuperMarket.point[1]));
       const input2 = factory.createPoint(new jsts.geom.Coordinate(oParkingLot.point[0], oParkingLot.point[1]));

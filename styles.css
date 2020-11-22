@@ -18,7 +18,6 @@ html, body, #container, #map {
   overflow-wrap: break-word;
   text-align: center;
   padding: 0 0 3rem 0;
-  text-align: center;
 }
 .kpi {
   font-size: 2rem;

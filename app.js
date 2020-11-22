@@ -288,8 +288,9 @@ function loadLayerWithOverpass(oLayer, oQuery, oRIndex) {
 }
 
 
-let aUniqueSortedDistanceParkingLotSuperMarket = [];
+let aUniqueSortedDistanceParkingLotSuperMarket;
 const calculateDistanceMatrixForSuperMarketsAndParkingLots = () => {
+  aUniqueSortedDistanceParkingLotSuperMarket = []
   let start = [map.getCenter().lng, map.getCenter().lat];
   const amountOfNeigbhors = 25;
 
@@ -344,6 +345,7 @@ let deckMap = new deck.DeckGL({
   onWebGLInitialized: () => {
     Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {
       calculateDistanceMatrixForSuperMarketsAndParkingLots();
+      flyToPoint(0);
     })
     loadPeople();
   },
@@ -358,7 +360,7 @@ backButton.addEventListener("click", _ => {
 });
 
 forwardButton.addEventListener("click", _ => {
-  currentPoint++
+  currentPoint++;
   flyToPoint(currentPoint);
 })
 
@@ -368,11 +370,15 @@ const flyToPoint = currentIndex => {
     return;
   }
   let feature = aUniqueSortedDistanceParkingLotSuperMarket;
-  if (currentIndex > feature.length || currentIndex < 0) {
-    backButton.disabled = true
-    currentIndex = currentPoint = 0;
+  if (currentIndex == 0) {
+    backButton.disabled = true;
+    forwardButton.disabled = false;
+  } else if(currentIndex == feature.length-1) {
+    forwardButton.disabled = true;
+    backButton.disabled = false;
   } else {
-    backButton.disabled = false
+    backButton.disabled = false;
+    forwardButton.disabled = false;
   }
   try {
     currentPoint2 = aUniqueSortedDistanceParkingLotSuperMarket[currentIndex].superMarket.point;
@@ -441,6 +447,9 @@ document.getElementById("locate-me").addEventListener("click", () => {
 
     Promise.all([loadParkingLots(), loadSuperMarkets()]).then(() => {
       calculateDistanceMatrixForSuperMarketsAndParkingLots();
+      currentPoint = 0;
+      currentIndex = 0;
+      flyToPoint(0);
     });
     loadPeople();
 

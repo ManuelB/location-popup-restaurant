@@ -12,7 +12,7 @@ html, body, #container, #map {
   box-shadow: 0 0px 16px rgba(0, 0, 0, 0.24);
   top: 1vh;
   right: 1vw;
-  min-width: 20rem;
+  min-width: 25rem;
   max-width: 30rem;
   z-index: 2;
   overflow-wrap: break-word;
@@ -72,6 +72,10 @@ html, body, #container, #map {
   margin: 0;  
   transition: background-color .3s;
   height: 100%;
+}
+.btn[disabled], .btn[disabled]:hover, .btn[disabled]:focus {
+  color: #aee6e6;
+  background-color: #aee6e6;
 }
 .btn.left {
   border-bottom-left-radius: 1rem;

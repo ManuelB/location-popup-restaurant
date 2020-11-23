@@ -143,7 +143,7 @@ function getTooltip({ object }) {
 
 
 const ICON_MAPPING = {
-  marker: {x: 0, y: 0, width: 128, height: 128, mask: true}
+  marker: {x: 0, y: 0, width: 128, height: 128, mask: true, anchorX: 64, anchorY: 140}
 };
 
 const getCoordinates = d => {
